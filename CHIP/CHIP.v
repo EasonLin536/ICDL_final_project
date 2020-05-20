@@ -1,4 +1,4 @@
-`define IMG_DIM    20
+`define IMG_DIM    21
 `define BIT_LENGTH 5
 `define TOTAL_REG  `IMG_DIM*`IMG_DIM
 `define TMP_REG    (`IMG_DIM - 2)*(`IMG_DIM - 2)
