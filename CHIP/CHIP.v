@@ -56,7 +56,8 @@ module CHIP ( clk, reset, mode, pixel_in0, pixel_in1, pixel_in2, edge_out, pixel
     reg               [1:0] reg_angle [0:`TMP_REG - 1];
 
 // =============== Combinational =============== //
-	// FSM
+	// FSM : state
+	// TODO: how to determine operations are over
 	always @(*) begin
 		case (state)
 			LOAD_REG: state_next = load_end ? SET_OP : LOAD_REG;
@@ -92,7 +93,8 @@ module CHIP ( clk, reset, mode, pixel_in0, pixel_in1, pixel_in2, edge_out, pixel
 		endcase
 	end
 
-	// operation state transition
+	// operation transition
+	// TODO: row and col initialization
 	always @(*) begin
 		if (state == SET_OP) begin
 			if (mode == EDGE) begin
@@ -121,9 +123,6 @@ module CHIP ( clk, reset, mode, pixel_in0, pixel_in1, pixel_in2, edge_out, pixel
 			operation_next = operation;
 		end
 	end
-
-	// row & col transition
-	
 
 // ================ Sequential ================= //
 	always @(posedge clk or posedge reset) begin
@@ -166,7 +165,5 @@ module CHIP ( clk, reset, mode, pixel_in0, pixel_in1, pixel_in2, edge_out, pixel
 				for (i=0;i<`TOTAL_REG;i=i+1) reg_img[i] <= reg_img[i];
 			end
 		end
-		
 	end
-
 endmodule
