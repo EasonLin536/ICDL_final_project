@@ -1,16 +1,30 @@
 `define IMG_DIM    20
 `define BIT_LENGTH 5
-`define TOTAL_REG  `IMG_DIM*`IMG_DIM
-`define TMP_REG    (`IMG_DIM - 2)*(`IMG_DIM - 2)
+`define TOTAL_REG  `IMG_DIM * `IMG_DIM
+`define TMP_REG    (`IMG_DIM - 2) * (`IMG_DIM - 2)
 
-module Main_Ctrl_Unit ( clk, reset, mode, pixel_in0, pixel_in1, pixel_in2, pixel_out );
-	input                    clk, reset, mode;
-	input [`BIT_LENGTH - 1:0] pixel_in0, pixel_in1, pixel_in2;
-	output                   pixel_out;
+module Main_Ctrl_Unit ( clk, reset, mode, pixel_in0, pixel_in1, pixel_in2, edge_out, pixel_out );
+	input                      clk, reset, mode;
+	input  [`BIT_LENGTH - 1:0] pixel_in0, pixel_in1, pixel_in2; // input 3 pixels per cycle
+	output                     edge_out; // pixel is edge or not
+	output [`BIT_LENGTH - 1:0] pixel_out; // pixel's color
 
 // ================ Reg & Wires ================ //
 	reg [4:0] row, row_next, col, col_next; // current row and col (lower right of the filter)
     reg load_reg_done_r, load_reg_done_w; // if img_reg is entirely filled 1, else 0
+
+	reg  [`BIT_LENGTH - 1:0] reg_MED_in [0:2]; // reg for median filter's input
+	reg  [`BIT_LENGTH - 1:0] reg_GAU_in [0:4]; // reg for gaussian filter's input
+	wire [`BIT_LENGTH - 1:0] MED_in0, MED_in1, MED_in2;
+	wire [`BIT_LENGTH - 1:0] GAU_in0, GAU_in1, GAU_in2, GAU_in3, GAU_in4;
+	assign MED_in0 = reg_MED_in[0];
+	assign MED_in0 = reg_MED_in[1];
+	assign MED_in0 = reg_MED_in[2];
+	assign GAU_in0 = reg_GAU_in[0];
+	assign GAU_in1 = reg_GAU_in[1];
+	assign GAU_in2 = reg_GAU_in[2];
+	assign GAU_in3 = reg_GAU_in[3];
+	assign GAU_in4 = reg_GAU_in[4];
 
     integer i;
 
@@ -41,7 +55,6 @@ module Main_Ctrl_Unit ( clk, reset, mode, pixel_in0, pixel_in1, pixel_in2, pixel
     reg [`BIT_LENGTH - 1:0] reg_tmp_w   [0:`TMP_REG - 1];
     reg               [1:0] reg_angle_r [0:`TMP_REG - 1];
     reg               [1:0] reg_angle_w [0:`TMP_REG - 1];
-
 
 // =============== Combinational =============== //
 	// FSM
