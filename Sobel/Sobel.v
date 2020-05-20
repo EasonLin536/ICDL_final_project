@@ -4,15 +4,14 @@
 
 module Sobel ( clk, reset, pixel_in1, pixel_in2, pixel_in3, enable, pixel_out, angle_out, readable );
 
-    input                      clk, reset;
-    input                      enable;    // generate by main ctrl unit: =0: no operation; =1: operation
-    output                     readable;  // when the entire image is processed
-    input  [`BIT_LENGTH - 1:0] pixel_in1;
-    input  [`BIT_LENGTH - 1:0] pixel_in2;
-    input  [`BIT_LENGTH - 1:0] pixel_in3;
-    output [`BIT_LENGTH - 1:0] pixel_out; // gradient
-
-    output [`BIT_LENGTH_ANG-1:0] angle_out; // angle
+    input                          clk, reset;
+    input                          enable;    // generate by main ctrl unit: =0: no operation; =1: operation
+    output                         readable;  // when the entire image is processed
+    input      [`BIT_LENGTH - 1:0] pixel_in1;
+    input      [`BIT_LENGTH - 1:0] pixel_in2;
+    input      [`BIT_LENGTH - 1:0] pixel_in3;
+    output     [`BIT_LENGTH - 1:0] pixel_out; // gradient
+    output [`BIT_LENGTH_ANG - 1:0] angle_out; // angle
 
 // ================ Reg & Wires ================ //
 
@@ -62,24 +61,24 @@ module Sobel ( clk, reset, pixel_in1, pixel_in2, pixel_in3, enable, pixel_out, a
     // conparator
     wire   [`BIT_LENGTH_GRD - 1:0] w0, w1, w2, w3, w4, w5;
 
-    wire   [`BIT_LENGTH_GRD - 1:0]    Gxt;
-    wire   [`BIT_LENGTH_GRD - 1:0]    Gyt;
-    wire   w20, w21;
-    wire   [2:0]   w23;
+    wire   [`BIT_LENGTH_GRD - 1:0] Gxt;
+    wire   [`BIT_LENGTH_GRD - 1:0] Gyt;
+    
+    wire         w20, w21;
+    wire   [2:0] w23;
     // for loop
     integer i;
 
+    assign pixel_out = output_r;
+    assign output_w  = reg_gradient;
 
-    assign pixel_out  = output_r;
-    assign output_w   = reg_gradient;
-
-    assign angle_out  = ang_output_r;
+    assign angle_out    = ang_output_r;
     assign ang_output_w = reg_angle;
 
     assign readable   = readable_r;
     assign readable_w = reg_readable;
 
-    assign angle= r_angle;
+    assign angle = r_angle;
 
 // =============== Combinational =============== //
     
@@ -138,13 +137,13 @@ module Sobel ( clk, reset, pixel_in1, pixel_in2, pixel_in3, enable, pixel_out, a
         x8 = reg_pixel_col2[2];
     end
 
-    assign w0 = (~x0 + 8'd1) + ( (~x1+8'd1) << 1) + (~x2 + 8'd1);
-    assign w1 = 8'd0;                            //( 0 * x[3]) + ( 0 * x[4]) + ( 0 * x[5]);
+    assign w0 = (~x0 + 8'd1) + ( (~x1 + 8'd1) << 1) + (~x2 + 8'd1);
+    assign w1 = 8'd0; //( 0 * x[3]) + ( 0 * x[4]) + ( 0 * x[5]);
     assign w2 = ((x6) + (x7 << 1)) + (x8);
 
-    assign w3 = (x0) + (~x2 + 8'd1);                  //+ ( 0 * x[1])
-    assign w4 = (x3<<1) + ((~x5+8'd1) << 1);              //+ ( 0 * x[4]) 
-    assign w5 = (x6) + (~x8 + 8'd1);              //+ ( 0 * x[7]) 
+    assign w3 = (x0) + (~x2 + 8'd1); //+ ( 0 * x[1])
+    assign w4 = (x3 << 1) + ((~x5 + 8'd1) << 1); //+ ( 0 * x[4]) 
+    assign w5 = (x6) + (~x8 + 8'd1); //+ ( 0 * x[7]) 
 /*
     assign w0 = ((-1*x0) + ( -2*x1)) + (-1*x2);
     assign w1 = 8'd0;                            //( 0 * x[3]) + ( 0 * x[4]) + ( 0 * x[5]);
@@ -158,8 +157,7 @@ module Sobel ( clk, reset, pixel_in1, pixel_in2, pixel_in3, enable, pixel_out, a
     assign wire_Gx = (w0 + w1) + w2;
     assign wire_Gy = (w3 + w4) + w5;
 
-
-    assign absGradient = (gradient[`BIT_LENGTH_GRD-1]) ? (~gradient + 8'd1) : gradient ;
+    assign absGradient = (gradient[`BIT_LENGTH_GRD-1]) ? (~gradient + 8'd1) : gradient;
 
     assign sign_xor = wire_Gx[`BIT_LENGTH_GRD - 1] ^ wire_Gy[`BIT_LENGTH_GRD-1];
 
@@ -227,5 +225,4 @@ module Sobel ( clk, reset, pixel_in1, pixel_in2, pixel_in3, enable, pixel_out, a
             readable_r <= readable_w;
         end
     end
-
 endmodule
