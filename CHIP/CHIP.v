@@ -13,6 +13,7 @@ module CHIP ( clk, reset, mode, pixel_in0, pixel_in1, pixel_in2, edge_out, pixel
 	reg  [8:0] load_index; // calculate index when loading
 	
 	reg  [4:0] row, row_next, col, col_next; // current row and col (lower right of the filter)
+	reg        row_end, col_end; // determine kernel movement
 
 	reg  [`BIT_LENGTH - 1:0] reg_3_in [0:2]; // reg for median filter's input
 	reg  [`BIT_LENGTH - 1:0] reg_GAU_in [0:4]; // reg for gaussian filter's input
@@ -65,7 +66,7 @@ module CHIP ( clk, reset, mode, pixel_in0, pixel_in1, pixel_in2, edge_out, pixel
 			PREPARE: begin
 				if (mode == EDGE) begin
 					// column not end
-					if (col < `IMG_DIM - 1) state_next = LOAD_MOD;
+					if (!col_end) state_next = LOAD_MOD;
 					// column end
 					else begin
 						// the entire operation is over
@@ -75,7 +76,7 @@ module CHIP ( clk, reset, mode, pixel_in0, pixel_in1, pixel_in2, edge_out, pixel
 				end
 				else begin
 					// column not end
-					if (col < `IMG_DIM - 1) state_next = LOAD_MOD;
+					if (!col_end) state_next = LOAD_MOD;
 					// column end
 					else begin
 						// the entire operation is over
@@ -85,7 +86,7 @@ module CHIP ( clk, reset, mode, pixel_in0, pixel_in1, pixel_in2, edge_out, pixel
 				end
 			end
 			LOAD_MOD: begin
-				if (row < `IMG_DIM - 1) state_next = LOAD_MOD;
+				if (!row_end) state_next = LOAD_MOD;
 				else state_next = PREPARE;
 			end
 			WRITE_BACK: state_next = SET_OP;
@@ -94,7 +95,6 @@ module CHIP ( clk, reset, mode, pixel_in0, pixel_in1, pixel_in2, edge_out, pixel
 	end
 
 	// operation transition
-	// TODO: row and col initialization
 	always @(*) begin
 		if (state == SET_OP) begin
 			if (mode == EDGE) begin
@@ -122,6 +122,23 @@ module CHIP ( clk, reset, mode, pixel_in0, pixel_in1, pixel_in2, edge_out, pixel
 		else begin
 			operation_next = operation;
 		end
+	end
+
+	// col_end, row_end
+	always @(*) begin
+		if (col < `IMG_DIM) col_end = 1'b0;
+		else col_end = 1'b1;
+
+		case (operation)
+			GAU_FIL: begin
+				if (row < `IMG_DIM - 4) row_end = 1'b0;
+				else row_end = 1'b1;
+			end
+			default: begin
+				if (row < `IMG_DIM - 2) row_end = 1'b0;
+				else row_end = 1'b1;
+			end
+		endcase
 	end
 
 // ================ Sequential ================= //
