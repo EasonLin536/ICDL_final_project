@@ -13,13 +13,13 @@ module Main_Ctrl_Unit ( clk, reset, mode, pixel_in0, pixel_in1, pixel_in2, edge_
 	reg [4:0] row, row_next, col, col_next; // current row and col (lower right of the filter)
     reg load_reg_done_r, load_reg_done_w; // if img_reg is entirely filled 1, else 0
 
-	reg  [`BIT_LENGTH - 1:0] reg_MED_in [0:2]; // reg for median filter's input
+	reg  [`BIT_LENGTH - 1:0] reg_3_in [0:2]; // reg for median filter's input
 	reg  [`BIT_LENGTH - 1:0] reg_GAU_in [0:4]; // reg for gaussian filter's input
-	wire [`BIT_LENGTH - 1:0] MED_in0, MED_in1, MED_in2;
+	wire [`BIT_LENGTH - 1:0] in3_0, in3_1, in3_2;
 	wire [`BIT_LENGTH - 1:0] GAU_in0, GAU_in1, GAU_in2, GAU_in3, GAU_in4;
-	assign MED_in0 = reg_MED_in[0];
-	assign MED_in0 = reg_MED_in[1];
-	assign MED_in0 = reg_MED_in[2];
+	assign in3_0 = reg_3_in[0];
+	assign in3_0 = reg_3_in[1];
+	assign in3_0 = reg_3_in[2];
 	assign GAU_in0 = reg_GAU_in[0];
 	assign GAU_in1 = reg_GAU_in[1];
 	assign GAU_in2 = reg_GAU_in[2];
@@ -126,7 +126,7 @@ module Main_Ctrl_Unit ( clk, reset, mode, pixel_in0, pixel_in1, pixel_in2, edge_
 			row             <= row_next;
 			col             <= col_next;
 			operation       <= operation_next;
-			load_reg_done_r <= load_reg_done_w
+			load_reg_done_r <= load_reg_done_w;
 			for (i=0;i<`TOTAL_REG;i=i+1) reg_img_r[i]   <= reg_img_w[i];
 			for (i=0;i<`TMP_REG;i=i+1)   reg_tmp_r[i]   <= reg_tmp_w[i];
 			for (i=0;i<`TMP_REG;i=i+1)   reg_angle_r[i] <= reg_angle_w[i];
