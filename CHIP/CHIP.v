@@ -3,15 +3,16 @@
 `define TOTAL_REG  `IMG_DIM * `IMG_DIM
 `define TMP_REG    (`IMG_DIM - 2) * (`IMG_DIM - 2)
 
-module Main_Ctrl_Unit ( clk, reset, mode, pixel_in0, pixel_in1, pixel_in2, edge_out, pixel_out );
-	input                      clk, reset, mode;
+module Main_Ctrl_Unit ( clk, reset, mode, pixel_in0, pixel_in1, pixel_in2, edge_out, pixel_out, load_end );
+	input                      clk, reset, mode, load_end;
 	input  [`BIT_LENGTH - 1:0] pixel_in0, pixel_in1, pixel_in2; // input 3 pixels per cycle
 	output                     edge_out; // pixel is edge or not
 	output [`BIT_LENGTH - 1:0] pixel_out; // pixel's color
 
 // ================ Reg & Wires ================ //
-	reg [4:0] row, row_next, col, col_next; // current row and col (lower right of the filter)
-    reg load_reg_done_r, load_reg_done_w; // if img_reg is entirely filled 1, else 0
+	wire [8:0] load_index; // calculate index when loading
+	
+	reg  [4:0] row, row_next, col, col_next; // current row and col (lower right of the filter)
 
 	reg  [`BIT_LENGTH - 1:0] reg_3_in [0:2]; // reg for median filter's input
 	reg  [`BIT_LENGTH - 1:0] reg_GAU_in [0:4]; // reg for gaussian filter's input
@@ -60,7 +61,7 @@ module Main_Ctrl_Unit ( clk, reset, mode, pixel_in0, pixel_in1, pixel_in2, edge_
 	// FSM
 	always @(*) begin
 		case (state)
-			LOAD_REG: state_next = load_reg_done_r ? SET_OP : LOAD_REG;
+			LOAD_REG: state_next = load_end ? SET_OP : LOAD_REG;
 			SET_OP:   state_next = PREPARE;
 			PREPARE: begin
 				if (mode == EDGE) begin
@@ -93,43 +94,34 @@ module Main_Ctrl_Unit ( clk, reset, mode, pixel_in0, pixel_in1, pixel_in2, edge_
 		endcase
 	end
 
-
-	always @(*) begin
-		if (state == LOAD_REG) begin
-			for (i=0;i<`TOTAL_REG;i=i+3) begin
-				reg_img_w[i] = pixel_in0;
-				if (i+1 < `TOTAL_REG) reg_img_w[i+1] = pixel_in1;
-				if (i+2 < `TOTAL_REG) reg_img_w[i+2] = pixel_in2;
-			end
-		end
-		else begin
-			for (i=0;i<`TOTAL_REG;i=i+1) begin
-				reg_img_w[i] = reg_img_r[i];
-			end
-		end
-	end
-
 // ================ Sequential ================= //
 	always @(posedge clk) begin
 		if (reset) begin
-			state           <= LOAD_REG;
-			row             <= 5'd0;
-			col             <= 5'd0;
-			operation       <= MED_FIL;
-			load_reg_done_r <= 1'd0;
-			for (i=0;i<`TOTAL_REG;i=i+1) reg_img_r[i]   <= 5'd0;
-			for (i=0;i<`TMP_REG;i=i+1)   reg_tmp_r[i]   <= 5'd0;
-			for (i=0;i<`TMP_REG;i=i+1)   reg_angle_r[i] <= 2'd0;
+			load_index <= 9'd0;
+			state     <= LOAD_REG;
+			row       <= 5'd0;
+			col       <= 5'd0;
+			operation <= MED_FIL;
 		end
 		else begin
-			state           <= state_next;
-			row             <= row_next;
-			col             <= col_next;
-			operation       <= operation_next;
-			load_reg_done_r <= load_reg_done_w;
-			for (i=0;i<`TOTAL_REG;i=i+1) reg_img_r[i]   <= reg_img_w[i];
-			for (i=0;i<`TMP_REG;i=i+1)   reg_tmp_r[i]   <= reg_tmp_w[i];
-			for (i=0;i<`TMP_REG;i=i+1)   reg_angle_r[i] <= reg_angle_w[i];
+			load_index <= load_index + 3;
+			state     <= state_next;
+			row       <= row_next;
+			col       <= col_next;
+			operation <= operation_next;
 		end
 	end
+
+	always @(posedge clk and state == LOAD_REG) begin
+		if (!load_end) begin
+			reg_img_r[load_index] <= pixel_in0;
+			reg_img_r[load_index+1] <= pixel_in1;
+			reg_img_r[load_index+2] <= pixel_in2;
+		end
+		else begin
+			reg_img_r[load_index] <= pixel_in0;
+			reg_img_r[load_index+1] <= pixel_in1;
+		end
+	end
+
 endmodule
