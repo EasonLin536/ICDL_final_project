@@ -95,7 +95,7 @@ module CHIP ( clk, reset, mode, pixel_in0, pixel_in1, pixel_in2, edge_out, pixel
 	end
 
 // ================ Sequential ================= //
-	always @(posedge clk) begin
+	always @(posedge clk or posedge reset) begin
 		if (reset) begin
 			load_index <= 9'd0;
 			state     <= LOAD_REG;
@@ -112,18 +112,30 @@ module CHIP ( clk, reset, mode, pixel_in0, pixel_in1, pixel_in2, edge_out, pixel
 		end
 	end
 
-	always @(posedge clk) begin
-		if (state == LOAD_REG) begin
-			if (!load_end) begin
-				reg_img_r[load_index] <= pixel_in0;
-				reg_img_r[load_index+1] <= pixel_in1;
-				reg_img_r[load_index+2] <= pixel_in2;
+	// load pixels into img register file
+	always @(posedge clk or posedge reset) begin
+		if (reset) begin
+			for (i=0;i<`TOTAL_REG;i=i+1) reg_img_r[i] <= 5'd0;
+		end
+		else begin
+			if (state == LOAD_REG) begin
+				for (i=0;i<`TOTAL_REG;i=i+1) reg_img_r[i] <= reg_img_r[i];
+				if (!load_end) begin
+					reg_img_r[load_index]   <= pixel_in0;
+					reg_img_r[load_index+1] <= pixel_in1;
+					reg_img_r[load_index+2] <= pixel_in2;
+				end
+				else begin
+					// if it is the last input, only 2 pixels
+					reg_img_r[load_index]   <= pixel_in0;
+					reg_img_r[load_index+1] <= pixel_in1;
+				end
 			end
 			else begin
-				reg_img_r[load_index] <= pixel_in0;
-				reg_img_r[load_index+1] <= pixel_in1;
+				for (i=0;i<`TOTAL_REG;i=i+1) reg_img_r[i] <= reg_img_r[i];
 			end
 		end
+		
 	end
 
 endmodule
