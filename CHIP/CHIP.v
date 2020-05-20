@@ -10,7 +10,7 @@ module CHIP ( clk, reset, mode, pixel_in0, pixel_in1, pixel_in2, edge_out, pixel
 	output [`BIT_LENGTH - 1:0] pixel_out; // pixel's color
 
 // ================ Reg & Wires ================ //
-	wire [8:0] load_index; // calculate index when loading
+	reg  [8:0] load_index; // calculate index when loading
 	
 	reg  [4:0] row, row_next, col, col_next; // current row and col (lower right of the filter)
 
@@ -112,15 +112,17 @@ module CHIP ( clk, reset, mode, pixel_in0, pixel_in1, pixel_in2, edge_out, pixel
 		end
 	end
 
-	always @(posedge clk and state == LOAD_REG) begin
-		if (!load_end) begin
-			reg_img_r[load_index] <= pixel_in0;
-			reg_img_r[load_index+1] <= pixel_in1;
-			reg_img_r[load_index+2] <= pixel_in2;
-		end
-		else begin
-			reg_img_r[load_index] <= pixel_in0;
-			reg_img_r[load_index+1] <= pixel_in1;
+	always @(posedge clk) begin
+		if (state == LOAD_REG) begin
+			if (!load_end) begin
+				reg_img_r[load_index] <= pixel_in0;
+				reg_img_r[load_index+1] <= pixel_in1;
+				reg_img_r[load_index+2] <= pixel_in2;
+			end
+			else begin
+				reg_img_r[load_index] <= pixel_in0;
+				reg_img_r[load_index+1] <= pixel_in1;
+			end
 		end
 	end
 
