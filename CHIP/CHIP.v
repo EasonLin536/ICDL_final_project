@@ -122,6 +122,9 @@ module CHIP ( clk, reset, mode, pixel_in0, pixel_in1, pixel_in2, edge_out, pixel
 		end
 	end
 
+	// row & col transition
+	
+
 // ================ Sequential ================= //
 	always @(posedge clk or posedge reset) begin
 		if (reset) begin
