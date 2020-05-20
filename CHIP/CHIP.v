@@ -3,7 +3,7 @@
 `define TOTAL_REG  `IMG_DIM * `IMG_DIM
 `define TMP_REG    (`IMG_DIM - 2) * (`IMG_DIM - 2)
 
-module Main_Ctrl_Unit ( clk, reset, mode, pixel_in0, pixel_in1, pixel_in2, edge_out, pixel_out, load_end );
+module CHIP ( clk, reset, mode, pixel_in0, pixel_in1, pixel_in2, edge_out, pixel_out, load_end );
 	input                      clk, reset, mode, load_end;
 	input  [`BIT_LENGTH - 1:0] pixel_in0, pixel_in1, pixel_in2; // input 3 pixels per cycle
 	output                     edge_out; // pixel is edge or not
