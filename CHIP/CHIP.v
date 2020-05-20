@@ -42,20 +42,18 @@ module CHIP ( clk, reset, mode, pixel_in0, pixel_in1, pixel_in2, edge_out, pixel
     parameter WRITE_BACK = 3'd4;
 
     reg [2:0] operation, operation_next; // current operation e.g., Median_Filter
-    parameter MED_FIL  = 3'd0;
-    parameter GAU_FIL  = 3'd1;
-    parameter SOBEL    = 3'd2;
-    parameter NON_MAX  = 3'd3;
-    parameter HYSTER   = 3'd4;
-    parameter QUANTIZE = 3'd5;
+    parameter IDLE     = 3'd0;
+	parameter MED_FIL  = 3'd1;
+    parameter GAU_FIL  = 3'd2;
+    parameter SOBEL    = 3'd3;
+    parameter NON_MAX  = 3'd4;
+    parameter HYSTER   = 3'd5;
+    parameter QUANTIZE = 3'd6;
 
 // =============== Register File =============== //
-    reg [`BIT_LENGTH - 1:0] reg_img_r   [0:`TOTAL_REG - 1];
-    reg [`BIT_LENGTH - 1:0] reg_img_w   [0:`TOTAL_REG - 1];
-    reg [`BIT_LENGTH - 1:0] reg_tmp_r   [0:`TMP_REG - 1];
-    reg [`BIT_LENGTH - 1:0] reg_tmp_w   [0:`TMP_REG - 1];
-    reg               [1:0] reg_angle_r [0:`TMP_REG - 1];
-    reg               [1:0] reg_angle_w [0:`TMP_REG - 1];
+    reg [`BIT_LENGTH - 1:0] reg_img   [0:`TOTAL_REG - 1];
+    reg [`BIT_LENGTH - 1:0] reg_tmp   [0:`TMP_REG - 1];
+    reg               [1:0] reg_angle [0:`TMP_REG - 1];
 
 // =============== Combinational =============== //
 	// FSM
@@ -94,6 +92,36 @@ module CHIP ( clk, reset, mode, pixel_in0, pixel_in1, pixel_in2, edge_out, pixel
 		endcase
 	end
 
+	// operation state transition
+	always @(*) begin
+		if (state == SET_OP) begin
+			if (mode == EDGE) begin
+				case (operation)
+					IDLE:    operation_next = MED_FIL;
+					MED_FIL: operation_next = GAU_FIL;
+					GAU_FIL: operation_next = SOBEL;
+					SOBEL:   operation_next = NON_MAX;
+					NON_MAX: operation_next = HYSTER;
+					HYSTER:  operation_next = IDLE;
+					default: operation_next = IDLE;
+				endcase
+			end
+			// mode == COLOR
+			else begin
+				case (operation)
+					IDLE:     operation_next = GAU_FIL;
+					GAU_FIL:  operation_next = MED_FIL;
+					MED_FIL:  operation_next = QUANTIZE;
+					QUANTIZE: operation_next = IDLE;
+					default:  operation_next = IDLE;
+				endcase
+			end
+		end
+		else begin
+			operation_next = operation;
+		end
+	end
+
 // ================ Sequential ================= //
 	always @(posedge clk or posedge reset) begin
 		if (reset) begin
@@ -115,24 +143,24 @@ module CHIP ( clk, reset, mode, pixel_in0, pixel_in1, pixel_in2, edge_out, pixel
 	// load pixels into img register file
 	always @(posedge clk or posedge reset) begin
 		if (reset) begin
-			for (i=0;i<`TOTAL_REG;i=i+1) reg_img_r[i] <= 5'd0;
+			for (i=0;i<`TOTAL_REG;i=i+1) reg_img[i] <= 5'd0;
 		end
 		else begin
 			if (state == LOAD_REG) begin
-				for (i=0;i<`TOTAL_REG;i=i+1) reg_img_r[i] <= reg_img_r[i];
+				for (i=0;i<`TOTAL_REG;i=i+1) reg_img[i] <= reg_img[i];
 				if (!load_end) begin
-					reg_img_r[load_index]   <= pixel_in0;
-					reg_img_r[load_index+1] <= pixel_in1;
-					reg_img_r[load_index+2] <= pixel_in2;
+					reg_img[load_index]   <= pixel_in0;
+					reg_img[load_index+1] <= pixel_in1;
+					reg_img[load_index+2] <= pixel_in2;
 				end
 				else begin
 					// if it is the last input, only 2 pixels
-					reg_img_r[load_index]   <= pixel_in0;
-					reg_img_r[load_index+1] <= pixel_in1;
+					reg_img[load_index]   <= pixel_in0;
+					reg_img[load_index+1] <= pixel_in1;
 				end
 			end
 			else begin
-				for (i=0;i<`TOTAL_REG;i=i+1) reg_img_r[i] <= reg_img_r[i];
+				for (i=0;i<`TOTAL_REG;i=i+1) reg_img[i] <= reg_img[i];
 			end
 		end
 		
