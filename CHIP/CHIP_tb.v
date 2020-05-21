@@ -23,7 +23,7 @@ module tb();
 	// reg  [4:0] pixel2_mem [0:DATA_LENGTH-1];
 	// reg  [4:0] pixel3_mem [0:DATA_LENGTH-1];
 	// reg  [4:0] out_temp;
-
+	integer k;
 	// reg        stop;
 	// integer    i, j, out_f, err, pattern_num;
 	// reg        over;
@@ -61,20 +61,29 @@ module tb();
 	always begin #(`CYCLE/2) clk = ~clk; end
 
 	initial begin
-		#(`CYCLE*2)
-		pixel_in0 = 5'd1;
-		pixel_in1 = 5'd1;
-		pixel_in2 = 5'd1;
-		#(`CYCLE)
-		pixel_in0 = 5'd2;
-		pixel_in1 = 5'd2;
-		pixel_in2 = 5'd2;
-		#(`CYCLE)
-		load_end = 1'b1;
-		pixel_in0 = 5'd3;
-		pixel_in1 = 5'd3;
-		pixel_in2 = 5'd3;
-		#(`CYCLE)
+		#(`CYCLE*2);
+		for (k=0;k<10;k=k+1) begin
+			if (k == 9) begin
+				load_end = 1'b1;
+			end 
+			pixel_in0 = k[4:0];
+			pixel_in1 = k[4:0];
+			pixel_in2 = k[4:0];
+			#(`CYCLE);
+		end
+		// pixel_in0 = 5'd1;
+		// pixel_in1 = 5'd1;
+		// pixel_in2 = 5'd1;
+		// #(`CYCLE)
+		// pixel_in0 = 5'd2;
+		// pixel_in1 = 5'd2;
+		// pixel_in2 = 5'd2;
+		// #(`CYCLE)
+		// load_end = 1'b1;
+		// pixel_in0 = 5'd3;
+		// pixel_in1 = 5'd3;
+		// pixel_in2 = 5'd3;
+		#(`CYCLE);
 		$finish;
 	end
 
