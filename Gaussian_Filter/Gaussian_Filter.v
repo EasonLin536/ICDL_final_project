@@ -1,15 +1,15 @@
 `define BIT_LENGTH 5
 
-module Gaussian_Filter ( clk, reset, pixel_in1, pixel_in2, pixel_in3, pixel_in4, pixel_in5, enable, pixel_out, readable );
+module Gaussian_Filter ( clk, reset, pixel_in0, pixel_in1, pixel_in2, pixel_in3, pixel_in4, enable, pixel_out, readable );
 
 	input                      clk, reset;
 	input                      enable;    // generate by main ctrl unit: =0: no operation; =1: operation
 	output                     readable;  // when the entire image is processed
+	input  [`BIT_LENGTH - 1:0] pixel_in0;
 	input  [`BIT_LENGTH - 1:0] pixel_in1;
 	input  [`BIT_LENGTH - 1:0] pixel_in2;
 	input  [`BIT_LENGTH - 1:0] pixel_in3;
 	input  [`BIT_LENGTH - 1:0] pixel_in4;
-	input  [`BIT_LENGTH - 1:0] pixel_in5;
 	output [`BIT_LENGTH - 1:0] pixel_out;
 
 // ================ Reg & Wires ================ //
@@ -125,11 +125,11 @@ module Gaussian_Filter ( clk, reset, pixel_in1, pixel_in2, pixel_in3, pixel_in4,
 				reg_pixel_col2[i] <= reg_pixel_col3[i];
 				reg_pixel_col3[i] <= reg_pixel_col4[i];
 			end
-			reg_pixel_col4[0] <= pixel_in1;
-			reg_pixel_col4[1] <= pixel_in2;
-			reg_pixel_col4[2] <= pixel_in3;
-			reg_pixel_col4[3] <= pixel_in4;
-			reg_pixel_col4[4] <= pixel_in5;
+			reg_pixel_col4[0] <= pixel_in0;
+			reg_pixel_col4[1] <= pixel_in1;
+			reg_pixel_col4[2] <= pixel_in2;
+			reg_pixel_col4[3] <= pixel_in3;
+			reg_pixel_col4[4] <= pixel_in4;
 
             state      <= next_state;
             output_r   <= output_w;
@@ -139,13 +139,13 @@ module Gaussian_Filter ( clk, reset, pixel_in1, pixel_in2, pixel_in3, pixel_in4,
 
 endmodule
 
-module filter_col_0 ( pixel_1, pixel_2, pixel_3, pixel_4, pixel_5, sum );
+module filter_col_0 ( pixel_0, pixel_1, pixel_2, pixel_3, pixel_4, sum );
 	
+	input  [`BIT_LENGTH - 1:0] pixel_0;
 	input  [`BIT_LENGTH - 1:0] pixel_1;
 	input  [`BIT_LENGTH - 1:0] pixel_2;
 	input  [`BIT_LENGTH - 1:0] pixel_3;
 	input  [`BIT_LENGTH - 1:0] pixel_4;
-	input  [`BIT_LENGTH - 1:0] pixel_5;
 	output [`BIT_LENGTH + 6:0] sum;
 
 	wire   [`BIT_LENGTH + 3:0] extend_1;
@@ -156,11 +156,11 @@ module filter_col_0 ( pixel_1, pixel_2, pixel_3, pixel_4, pixel_5, sum );
 
 	wire   [11:0] w0, w1, w2, w3;
 
-	assign extend_1 = { 4'b0, pixel_1 };
-	assign extend_2 = { 4'b0, pixel_2 };
-	assign extend_3 = { 4'b0, pixel_3 };
-	assign extend_4 = { 4'b0, pixel_4 };
-	assign extend_5 = { 4'b0, pixel_5 };
+	assign extend_1 = { 4'b0, pixel_0 };
+	assign extend_2 = { 4'b0, pixel_1 };
+	assign extend_3 = { 4'b0, pixel_2 };
+	assign extend_4 = { 4'b0, pixel_3 };
+	assign extend_5 = { 4'b0, pixel_4 };
 
 	assign w0  = (extend_1 << 1) + (extend_2 << 2);
 	assign w1  = (extend_4 << 2) + (extend_5 << 1);
@@ -170,13 +170,13 @@ module filter_col_0 ( pixel_1, pixel_2, pixel_3, pixel_4, pixel_5, sum );
 
 endmodule
 
-module filter_col_1 ( pixel_1, pixel_2, pixel_3, pixel_4, pixel_5, sum );
+module filter_col_1 ( pixel_0, pixel_1, pixel_2, pixel_3, pixel_4, sum );
 
+	input  [`BIT_LENGTH - 1:0] pixel_0;
 	input  [`BIT_LENGTH - 1:0] pixel_1;
 	input  [`BIT_LENGTH - 1:0] pixel_2;
 	input  [`BIT_LENGTH - 1:0] pixel_3;
 	input  [`BIT_LENGTH - 1:0] pixel_4;
-	input  [`BIT_LENGTH - 1:0] pixel_5;
 	output [`BIT_LENGTH + 6:0] sum;
 
 	wire   [`BIT_LENGTH + 3:0] extend_1;
@@ -187,11 +187,11 @@ module filter_col_1 ( pixel_1, pixel_2, pixel_3, pixel_4, pixel_5, sum );
 
 	wire   [11:0] w0, w1, w2, w3, w4, w5;
 
-	assign extend_1 = { 4'b0, pixel_1 };
-	assign extend_2 = { 4'b0, pixel_2 };
-	assign extend_3 = { 4'b0, pixel_3 };
-	assign extend_4 = { 4'b0, pixel_4 };
-	assign extend_5 = { 4'b0, pixel_5 };
+	assign extend_1 = { 4'b0, pixel_0 };
+	assign extend_2 = { 4'b0, pixel_1 };
+	assign extend_3 = { 4'b0, pixel_2 };
+	assign extend_4 = { 4'b0, pixel_3 };
+	assign extend_5 = { 4'b0, pixel_4 };
 
 	assign w0  = (extend_1 << 2) + (extend_5 << 2);
 	assign w1  = (extend_2 << 3) + extend_2;
@@ -203,13 +203,13 @@ module filter_col_1 ( pixel_1, pixel_2, pixel_3, pixel_4, pixel_5, sum );
 
 endmodule
 
-module filter_col_2 ( pixel_1, pixel_2, pixel_3, pixel_4, pixel_5, sum );
+module filter_col_2 ( pixel_0, pixel_1, pixel_2, pixel_3, pixel_4, sum );
 
+	input  [`BIT_LENGTH - 1:0] pixel_0;
 	input  [`BIT_LENGTH - 1:0] pixel_1;
 	input  [`BIT_LENGTH - 1:0] pixel_2;
 	input  [`BIT_LENGTH - 1:0] pixel_3;
 	input  [`BIT_LENGTH - 1:0] pixel_4;
-	input  [`BIT_LENGTH - 1:0] pixel_5;
 	output [`BIT_LENGTH + 6:0] sum;
 
 	wire   [`BIT_LENGTH + 3:0] extend_1;
@@ -220,11 +220,11 @@ module filter_col_2 ( pixel_1, pixel_2, pixel_3, pixel_4, pixel_5, sum );
 
 	wire   [11:0] w0, w1, w2, w3, w4, w5, w6, w7;
 
-	assign extend_1 = { 4'b0, pixel_1 };
-	assign extend_2 = { 4'b0, pixel_2 };
-	assign extend_3 = { 4'b0, pixel_3 };
-	assign extend_4 = { 4'b0, pixel_4 };
-	assign extend_5 = { 4'b0, pixel_5 };
+	assign extend_1 = { 4'b0, pixel_0 };
+	assign extend_2 = { 4'b0, pixel_1 };
+	assign extend_3 = { 4'b0, pixel_2 };
+	assign extend_4 = { 4'b0, pixel_3 };
+	assign extend_5 = { 4'b0, pixel_4 };
 
 	assign w0 = (extend_1 << 2) + extend_1;
 	assign w1 = (extend_2 << 2) + (extend_2 << 3);

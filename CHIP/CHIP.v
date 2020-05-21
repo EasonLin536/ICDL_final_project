@@ -15,7 +15,7 @@ module CHIP ( clk, reset, pixel_in0, pixel_in1, pixel_in2, pixel_in3, pixel_in4,
 	reg  [8:0] ind_0_w, ind_1_w, ind_2_w, ind_3_w, ind_4_w;
 	reg  [8:0] ind_0_r, ind_1_r, ind_2_r, ind_3_r, ind_4_r; // current row and col (lower right of the filter)
 	
-	reg  [8:0] ind_col_end; // assign with ind_1 - 1, if ind_0 == ind_col_end -> col_end = 1'b0
+	reg  [8:0] ind_col_end_r, ind_col_end_w; // assign with ind_1 - 1, if ind_0 == ind_col_end -> col_end = 1'b0
 	reg        row_end, col_end; // determine kernel movement
 
 	// LOAD_MOD
@@ -73,15 +73,19 @@ module CHIP ( clk, reset, pixel_in0, pixel_in1, pixel_in2, pixel_in3, pixel_in4,
     reg               [1:0] reg_angle [0:`ANG_REG - 1];
 
 // =============== Combinational =============== //
+	/* sub-modules */
+	Median_Filter mf(clk, reset, pixel_in1, pixel_in2, pixel_in3, enable, pixel_out, readable);
+	Gaussian_Filter gf(clk, reset, pixel_in1, pixel_in2, pixel_in3, pixel_in4, pixel_in5, enable, pixel_out, readable)
+
 	/* FSM */
 	always @(*) begin
 		case (state)
 			LOAD_REG: state_next = load_end ? SET_OP : LOAD_REG;
 			SET_OP:   state_next = PREPARE;
 			PREPARE: begin
-				// column not end
+				// row not end
 				if (!row_end) state_next = LOAD_MOD;
-				// column end
+				// row end
 				else begin
 					// the entire operation is over
 					if (operation == HYSTER) state_next = LOAD_REG;
@@ -133,11 +137,49 @@ module CHIP ( clk, reset, pixel_in0, pixel_in1, pixel_in2, pixel_in3, pixel_in4,
 
 	/* PREPARE */
 	// assign ind_col_end
+	always @(*) begin
+		ind_col_end_w = (state == PREPARE) ? ind_1_r : ind_col_end_r;
+	end
+
 	// determine row_end
+	always @(*) begin
+		if (state == PREPARE) begin
+			if (operation == GAU_FIL) begin
+				row_end = (ind_4_r == 9'd400) ? 1'b1 : 1'b0;
+			end
+			else begin
+				row_end = (ind_2_r == 9'd400) ? 1'b1 : 1'b0;
+			end
+		end
+		else begin
+			row_end = 1'b0;
+		end
+	end
 
 	/* LOAD_MOD */
 	// update ind_0~4_w
+	always @(*) begin
+		if (state == LOAD_MOD) begin
+			ind_0_w = ind_0_r + 1;
+			ind_1_w = ind_1_r + 1;
+			ind_2_w = ind_2_r + 1;
+			ind_3_w = ind_3_r + 1;
+			ind_4_w = ind_4_r + 1;
+		end
+		else begin
+			ind_0_w = ind_0_r;
+			ind_1_w = ind_1_r;
+			ind_2_w = ind_2_r;
+			ind_3_w = ind_3_r;
+			ind_4_w = ind_4_r;
+		end
+	end
+
 	// load pixels into sub-modules, enable signals
+	always @() begin
+		
+	end
+
 	// load output to tmp & angle registers files, readable signals
 	// determin col_end
 
@@ -199,6 +241,7 @@ module CHIP ( clk, reset, pixel_in0, pixel_in1, pixel_in2, pixel_in3, pixel_in4,
 			ind_2_r    <= 9'd0;
 			ind_3_r    <= 9'd0;
 			ind_4_r    <= 9'd0;
+			ind_col_end_r <= 9'd0;
 			edge_out_r <= 1'b0;
 		end
 		else begin
@@ -210,6 +253,7 @@ module CHIP ( clk, reset, pixel_in0, pixel_in1, pixel_in2, pixel_in3, pixel_in4,
 			ind_2_r    <= ind_2_w;
 			ind_3_r    <= ind_3_w;
 			ind_4_r    <= ind_4_w;
+			ind_col_end_r <= ind_col_end_w;
 			edge_out_r <= edge_out_w;
 		end
 	end
