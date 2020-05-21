@@ -99,12 +99,13 @@ module CHIP ( clk, reset, pixel_in0, pixel_in1, pixel_in2, pixel_in3, pixel_in4,
 	always @(*) begin
 		if (state == SET_OP) begin
 			case (operation)
+				IDLE:    operation_next = MED_FIL;
 				MED_FIL: operation_next = GAU_FIL;
 				GAU_FIL: operation_next = SOBEL;
 				SOBEL:   operation_next = NON_MAX;
 				NON_MAX: operation_next = HYSTER;
-				HYSTER:  operation_next = MED_FIL;
-				default: operation_next = MED_FIL;
+				HYSTER:  operation_next = IDLE;
+				default: operation_next = IDLE;
 			endcase
 		end
 		else begin
@@ -113,7 +114,22 @@ module CHIP ( clk, reset, pixel_in0, pixel_in1, pixel_in2, pixel_in3, pixel_in4,
 	end
 
 	// ind initializeation
-	
+	always @(*) begin
+		if (state == SET_OP) begin
+			ind_0_w = 9'd0;
+			ind_1_w = 9'd20;
+			ind_2_w = 9'd40;
+			ind_3_w = 9'd60;
+			ind_4_w = 9'd80;
+		end
+		else begin
+			ind_0_w = ind_0_r;
+			ind_1_w = ind_1_r;
+			ind_2_w = ind_2_r;
+			ind_3_w = ind_3_r;
+			ind_4_w = ind_4_r;
+		end
+	end
 
 	/* PREPARE */
 	// assign ind_col_end
@@ -177,7 +193,7 @@ module CHIP ( clk, reset, pixel_in0, pixel_in1, pixel_in2, pixel_in3, pixel_in4,
 		if (reset) begin
 			state      <= LOAD_REG;
 			load_index <= 9'd0;
-			operation  <= MED_FIL;
+			operation  <= IDLE;
 			ind_0_r    <= 9'd0;
 			ind_1_r    <= 9'd0;
 			ind_2_r    <= 9'd0;
