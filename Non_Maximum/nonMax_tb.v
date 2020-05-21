@@ -29,7 +29,7 @@ module tb();
 	integer    i, j, out_f, err, pattern_num;
 	reg        over;
 
-	nonMax nM(clk_p_i, reset_p_i, angle_i, pixel_in0_i, pixel_in1_i, pixel_in2_i, enable_i, pixel_out_o, readable_o);
+	NonMax nM(clk_p_i, reset_p_i, angle_i, pixel_in0_i, pixel_in1_i, pixel_in2_i, enable_i, pixel_out_o, readable_o);
 	
 	initial	$readmemb (`PIXEL1,  pixel1_mem);
 	initial	$readmemb (`PIXEL2,  pixel2_mem);

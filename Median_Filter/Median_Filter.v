@@ -1,13 +1,13 @@
 `define BIT_LENGTH 5
 
-module Median_Filter ( clk, reset, pixel_in1, pixel_in2, pixel_in3, enable, pixel_out, readable );
+module Median_Filter ( clk, reset, pixel_in0, pixel_in1, pixel_in2, enable, pixel_out, readable );
 
 	input                      clk, reset;
 	input                      enable;    // generate by main ctrl unit: =0: no operation; =1: operation
 	output                     readable;  // when the entire image is processed
+	input  [`BIT_LENGTH - 1:0] pixel_in0;
 	input  [`BIT_LENGTH - 1:0] pixel_in1;
 	input  [`BIT_LENGTH - 1:0] pixel_in2;
-	input  [`BIT_LENGTH - 1:0] pixel_in3;
 	output [`BIT_LENGTH - 1:0] pixel_out;
 
 // ================ Reg & Wires ================ //
@@ -162,9 +162,9 @@ module Median_Filter ( clk, reset, pixel_in1, pixel_in2, pixel_in3, enable, pixe
 				reg_pixel_col0[i] <= reg_pixel_col1[i];
 				reg_pixel_col1[i] <= reg_pixel_col2[i];
 			end
-			reg_pixel_col2[0] <= pixel_in1;
-			reg_pixel_col2[1] <= pixel_in2;
-			reg_pixel_col2[2] <= pixel_in3;
+			reg_pixel_col2[0] <= pixel_in0;
+			reg_pixel_col2[1] <= pixel_in1;
+			reg_pixel_col2[2] <= pixel_in2;
 
             state      <= next_state;
             output_r   <= output_w;

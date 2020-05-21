@@ -2,7 +2,7 @@
 `define IMG_HEIGHT 720
 `define BIT_LENGTH 5
 
-module nonMax ( clk, reset, angle, pixel_in0, pixel_in1, pixel_in2, enable, pixel_out, readable);
+module NonMax ( clk, reset, angle, pixel_in0, pixel_in1, pixel_in2, enable, pixel_out, readable);
 	
 	input						clk, reset;
 	input						enable;		// true when operating (sent by main control)

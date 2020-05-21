@@ -35,9 +35,14 @@ module CHIP ( clk, reset, pixel_in0, pixel_in1, pixel_in2, pixel_in3, pixel_in4,
 	// output of sub-modules
 	wire [`BIT_LENGTH - 1:0] med_out;
 	wire [`BIT_LENGTH - 1:0] gau_out;
-	wire [`BIT_LENGTH - 1:0] sol_grad_out;
-	wire               [1:0] sol_ang_out;
+	wire [`BIT_LENGTH - 1:0] sb_grad_out;
+	wire               [1:0] sb_ang_out;
 	wire [`BIT_LENGTH - 1:0] non_max_out;
+
+	// enable of sub-modules : modify in LOAD_MOD
+	reg mf_en, gf_en, sb_en, nm_en, hy_en;
+	// readable of sub-modules
+	reg mf_read, gf_read, sb_read, nm_read, hy_read;
 
 	// output register
 	reg edge_out_r;
@@ -72,11 +77,24 @@ module CHIP ( clk, reset, pixel_in0, pixel_in1, pixel_in2, pixel_in3, pixel_in4,
     reg [`BIT_LENGTH - 1:0] reg_tmp   [0:`TOTAL_REG - 1];
     reg               [1:0] reg_angle [0:`ANG_REG - 1];
 
-// =============== Combinational =============== //
-	/* sub-modules */
-	Median_Filter mf(clk, reset, pixel_in1, pixel_in2, pixel_in3, enable, pixel_out, readable);
-	Gaussian_Filter gf(clk, reset, pixel_in1, pixel_in2, pixel_in3, pixel_in4, pixel_in5, enable, pixel_out, readable)
+// =========== Declare Sub-Modules ============= //
+	Median_Filter mf(.clk(clk), .reset(reset), .enable(mf_en),
+					 .pixel_in0(in3_0), .pixel_in1(in3_1), .pixel_in2(in3_2),
+					 .pixel_out(med_out), .readable(mf_read));
+	Gaussian_Filter gf(.clk(clk), .reset(reset), .enable(gf_en),
+					   .pixel_in0(in5_0), .pixel_in1(in5_1), .pixel_in2(in5_2), .pixel_in3(in5_3), .pixel_in4(in5_4),
+					   .pixel_out(gau_out), .readable(gf_read));
+	Sobel sb(.clk(clk), .reset(reset), .enable(sb_en),
+			 .pixel_in0(in3_0), .pixel_in1(in3_1), .pixel_in2(in3_2),
+			 .pixel_out(sb_grad_out), .angle_out(sb_ang_out), .readable(sb_read));
+	NonMax nm(.clk(clk), .reset(reset), .enable(nm_en),
+			  angle, .pixel_in0(in3_0), .pixel_in1(in3_1), .pixel_in2(in3_2),
+			  .pixel_out(non_max_out), .readable(nm_read));
+	Hyster hy(.clk(clk), .reset(reset), .enable(hy_en),
+			  .pixel_in0(in3_0), .pixel_in1(in3_1), .pixel_in2(in3_2),
+			  .pixel_out(edge_out_w), .readable(readable));
 
+// =============== Combinational =============== //
 	/* FSM */
 	always @(*) begin
 		case (state)
@@ -176,12 +194,30 @@ module CHIP ( clk, reset, pixel_in0, pixel_in1, pixel_in2, pixel_in3, pixel_in4,
 	end
 
 	// load pixels into sub-modules, enable signals
-	always @() begin
-		
+	always @(*) begin
+		if (state == LOAD_MOD) begin
+			
+		end
+		else begin
+			
+		end
 	end
 
 	// load output to tmp & angle registers files, readable signals
-	// determin col_end
+	always @(*) begin
+		if (state == LOAD_MOD) begin
+			
+		end
+		else begin
+			
+		end
+	end
+
+	// determine col_end
+	always @(*) begin
+		if (state == LOAD_MOD) col_end = (ind_0_r == ind_col_end - 1) ? 1'b1 : 1'b0;
+		else col_end = 1'b0;
+	end
 
 	/* WRITE_BACK */
 	// write tmp to img registers
