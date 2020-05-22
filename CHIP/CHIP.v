@@ -199,8 +199,7 @@ module CHIP ( clk, reset, pixel_in0, pixel_in1, pixel_in2, pixel_in3, pixel_in4,
 			ind_3_w = ind_3_r + 1;
 			ind_4_w = ind_4_r + 1;
 			ind_ang_w = (operation == NON_MAX) ? ind_ang_r + 1 : ind_ang_r;
-			ind_load_tmp_w = !col_end ? ind_load_tmp_r + 1 :
-							 (operation == GAU_FIL) ? load_tmp_r + 5 : load_tmp_r + 3;
+			ind_load_tmp_w = col_end ? (operation == GAU_FIL) ? : load_tmp_r + 5 : load_tmp_r + 3 : ind_load_tmp_r + 1;
 		end
 		else begin
 			ind_0_w = ind_0_r;
@@ -389,6 +388,7 @@ module CHIP ( clk, reset, pixel_in0, pixel_in1, pixel_in2, pixel_in3, pixel_in4,
 			ind_ang_r  <= 9'd0;
 			ind_load_tmp_r <= 9'd0;
 			ind_col_end_r <= 9'd0;
+			ind_en_rise_r <= 9'd0;
 			load_tmp_r <= 5'd0;
 			load_ang_r <= 2'd0;
 			edge_out_r <= 1'b0;
@@ -406,8 +406,9 @@ module CHIP ( clk, reset, pixel_in0, pixel_in1, pixel_in2, pixel_in3, pixel_in4,
 			ind_ang_r  <= ind_ang_w;
 			ind_load_tmp_r <= ind_load_tmp_w;
 			ind_col_end_r <= ind_col_end_w;
-			load_tmp_r <= load_tmp_w;
-			load_ang_r <= load_ang_w;
+			ind_en_rise_r <= ind_en_rise_w;
+			load_tmp_r <= load_tmp_w; // pixel
+			load_ang_r <= load_ang_w; // angle
 			edge_out_r <= edge_out_w;
 			enable_r   <= enable_w;
 		end
