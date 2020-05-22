@@ -88,7 +88,7 @@ module CHIP ( clk, reset, pixel_in0, pixel_in1, pixel_in2, pixel_in3, pixel_in4,
 			 .pixel_in0(in3_0), .pixel_in1(in3_1), .pixel_in2(in3_2),
 			 .pixel_out(sb_grad_out), .angle_out(sb_ang_out), .readable(sb_read));
 	NonMax nm(.clk(clk), .reset(reset), .enable(nm_en),
-			  angle, .pixel_in0(in3_0), .pixel_in1(in3_1), .pixel_in2(in3_2),
+			  .angle(), .pixel_in0(in3_0), .pixel_in1(in3_1), .pixel_in2(in3_2),
 			  .pixel_out(non_max_out), .readable(nm_read));
 	Hyster hy(.clk(clk), .reset(reset), .enable(hy_en),
 			  .pixel_in0(in3_0), .pixel_in1(in3_1), .pixel_in2(in3_2),
