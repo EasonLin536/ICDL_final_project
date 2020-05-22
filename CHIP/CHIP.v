@@ -54,7 +54,7 @@ module CHIP ( clk, reset, pixel_in0, pixel_in1, pixel_in2, pixel_in3, pixel_in4,
 	wire [`BIT_LENGTH - 1:0] non_max_out;
 	// sub-modules' registers
 	reg  [`BIT_LENGTH - 1:0] load_tmp_r, load_tmp_w;
-	reg  [`BIT_LENGTH - 1:0] load_ang_r, load_ang_w;
+	reg                [1:0] load_ang_r, load_ang_w;
 	assign load_ang_w = sb_read ? sb_ang_out : 2'd0;
 
 	// chip output register
