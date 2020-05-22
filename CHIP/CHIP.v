@@ -11,6 +11,7 @@ module CHIP ( clk, reset, pixel_in0, pixel_in1, pixel_in2, pixel_in3, pixel_in4,
 	// LOAD_REG
 	reg  [8:0] load_index; // calculate index when loading
 	
+	// LOAD_MOD
 	// input index
 	reg  [8:0] ind_0_r, ind_1_r, ind_2_r, ind_3_r, ind_4_r; // current index of pixel
 	reg  [8:0] ind_0_w, ind_1_w, ind_2_w, ind_3_w, ind_4_w;
@@ -20,10 +21,9 @@ module CHIP ( clk, reset, pixel_in0, pixel_in1, pixel_in2, pixel_in3, pixel_in4,
 	// indicators
 	reg  [8:0] ind_col_end_r, ind_col_end_w; // assign with ind_1 - 1, if ind_0 == ind_col_end -> col_end = 1'b0
 	reg        row_end, col_end; // determine kernel movement
-
-	// LOAD_MOD
-	reg  [`BIT_LENGTH - 1:0] reg_3_in_r [0:2]; // reg for median filter's input
-	reg  [`BIT_LENGTH - 1:0] reg_3_in_w [0:2]; // reg for median filter's input
+	// input pixel registers
+	reg  [`BIT_LENGTH - 1:0] reg_3_in_r [0:2]; // reg for 3 pixel's input
+	reg  [`BIT_LENGTH - 1:0] reg_3_in_w [0:2]; // reg for 3 pixel's input
 	reg  [`BIT_LENGTH - 1:0] reg_5_in_r [0:4]; // reg for gaussian filter's input
 	reg  [`BIT_LENGTH - 1:0] reg_5_in_w [0:4]; // reg for gaussian filter's input
 	wire [`BIT_LENGTH - 1:0] in3_0, in3_1, in3_2;
@@ -36,8 +36,9 @@ module CHIP ( clk, reset, pixel_in0, pixel_in1, pixel_in2, pixel_in3, pixel_in4,
 	assign in5_2 = reg_5_in_r[2];
 	assign in5_3 = reg_5_in_r[3];
 	assign in5_4 = reg_5_in_r[4];
-	reg                [1:0] reg_ang_r, reg_ang_w;
-	wire               [1:0] ang_in;
+	// input angle registers
+	reg  [1:0] reg_ang_r, reg_ang_w;
+	wire [1:0] ang_in;
 	assign ang_in = reg_ang_r;
 
 	// enable of sub-modules : modify in LOAD_MOD
@@ -51,13 +52,13 @@ module CHIP ( clk, reset, pixel_in0, pixel_in1, pixel_in2, pixel_in3, pixel_in4,
 	wire [`BIT_LENGTH - 1:0] sb_grad_out;
 	wire               [1:0] sb_ang_out;
 	wire [`BIT_LENGTH - 1:0] non_max_out;
+	// sub-modules' registers
 	reg  [`BIT_LENGTH - 1:0] load_tmp_r, load_tmp_w;
 	reg  [`BIT_LENGTH - 1:0] load_ang_r, load_ang_w;
 	assign load_ang_w = sb_read ? sb_ang_out : 2'd0;
 
-	// output register
-	reg edge_out_r;
-	reg edge_out_w;
+	// chip output register
+	reg edge_out_r, edge_out_w;
 
 	// for loops
     integer i;
@@ -428,5 +429,4 @@ module CHIP ( clk, reset, pixel_in0, pixel_in1, pixel_in2, pixel_in3, pixel_in4,
 			end
 		end
 	end
-
 endmodule
