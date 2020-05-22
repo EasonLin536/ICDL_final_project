@@ -1,7 +1,6 @@
 `define IMG_DIM    20
 `define BIT_LENGTH 5
 `define TOTAL_REG  `IMG_DIM * `IMG_DIM
-`define ANG_REG    (`IMG_DIM - 2) * (`IMG_DIM - 2)
 
 module CHIP ( clk, reset, pixel_in0, pixel_in1, pixel_in2, pixel_in3, pixel_in4, edge_out, load_end, readable );
 	input                      clk, reset, load_end;
@@ -19,18 +18,23 @@ module CHIP ( clk, reset, pixel_in0, pixel_in1, pixel_in2, pixel_in3, pixel_in4,
 	reg        row_end, col_end; // determine kernel movement
 
 	// LOAD_MOD
-	reg  [`BIT_LENGTH - 1:0] reg_3_in [0:2]; // reg for median filter's input
-	reg  [`BIT_LENGTH - 1:0] reg_5_in [0:4]; // reg for gaussian filter's input
+	reg  [`BIT_LENGTH - 1:0] reg_3_in_r [0:2]; // reg for median filter's input
+	reg  [`BIT_LENGTH - 1:0] reg_3_in_w [0:2]; // reg for median filter's input
+	reg  [`BIT_LENGTH - 1:0] reg_5_in_r [0:4]; // reg for gaussian filter's input
+	reg  [`BIT_LENGTH - 1:0] reg_5_in_w [0:4]; // reg for gaussian filter's input
 	wire [`BIT_LENGTH - 1:0] in3_0, in3_1, in3_2;
 	wire [`BIT_LENGTH - 1:0] in5_0, in5_1, in5_2, in5_3, in5_4;
-	assign in3_0 = reg_3_in[0];
-	assign in3_1 = reg_3_in[1];
-	assign in3_2 = reg_3_in[2];
-	assign in5_0 = reg_5_in[0];
-	assign in5_1 = reg_5_in[1];
-	assign in5_2 = reg_5_in[2];
-	assign in5_3 = reg_5_in[3];
-	assign in5_4 = reg_5_in[4];
+	assign in3_0 = reg_3_in_r[0];
+	assign in3_1 = reg_3_in_r[1];
+	assign in3_2 = reg_3_in_r[2];
+	assign in5_0 = reg_5_in_r[0];
+	assign in5_1 = reg_5_in_r[1];
+	assign in5_2 = reg_5_in_r[2];
+	assign in5_3 = reg_5_in_r[3];
+	assign in5_4 = reg_5_in_r[4];
+	reg                [1:0] reg_ang_r, reg_ang_w;
+	wire               [1:0] ang_in;
+	assign ang_in = reg_ang_r;
 
 	// output of sub-modules
 	wire [`BIT_LENGTH - 1:0] med_out;
@@ -75,7 +79,7 @@ module CHIP ( clk, reset, pixel_in0, pixel_in1, pixel_in2, pixel_in3, pixel_in4,
 // =============== Register File =============== //
     reg [`BIT_LENGTH - 1:0] reg_img   [0:`TOTAL_REG - 1];
     reg [`BIT_LENGTH - 1:0] reg_tmp   [0:`TOTAL_REG - 1];
-    reg               [1:0] reg_angle [0:`ANG_REG - 1];
+    reg               [1:0] reg_angle [0:`TOTAL_REG - 1];
 
 // =========== Declare Sub-Modules ============= //
 	Median_Filter mf(.clk(clk), .reset(reset), .enable(mf_en),
@@ -88,7 +92,7 @@ module CHIP ( clk, reset, pixel_in0, pixel_in1, pixel_in2, pixel_in3, pixel_in4,
 			 .pixel_in0(in3_0), .pixel_in1(in3_1), .pixel_in2(in3_2),
 			 .pixel_out(sb_grad_out), .angle_out(sb_ang_out), .readable(sb_read));
 	NonMax nm(.clk(clk), .reset(reset), .enable(nm_en),
-			  .angle(), .pixel_in0(in3_0), .pixel_in1(in3_1), .pixel_in2(in3_2),
+			  .angle(ang_in), .pixel_in0(in3_0), .pixel_in1(in3_1), .pixel_in2(in3_2),
 			  .pixel_out(non_max_out), .readable(nm_read));
 	Hyster hy(.clk(clk), .reset(reset), .enable(hy_en),
 			  .pixel_in0(in3_0), .pixel_in1(in3_1), .pixel_in2(in3_2),
@@ -156,17 +160,17 @@ module CHIP ( clk, reset, pixel_in0, pixel_in1, pixel_in2, pixel_in3, pixel_in4,
 	/* PREPARE */
 	// assign ind_col_end
 	always @(*) begin
-		ind_col_end_w = (state == PREPARE) ? ind_1_r : ind_col_end_r;
+		ind_col_end_w = (state == PREPARE) ? ind_1_r - 1 : ind_col_end_r;
 	end
 
 	// determine row_end
 	always @(*) begin
 		if (state == PREPARE) begin
 			if (operation == GAU_FIL) begin
-				row_end = (ind_4_r == 9'd400) ? 1'b1 : 1'b0;
+				row_end = (ind_4_r == 9'd399) ? 1'b1 : 1'b0;
 			end
 			else begin
-				row_end = (ind_2_r == 9'd400) ? 1'b1 : 1'b0;
+				row_end = (ind_2_r == 9'd399) ? 1'b1 : 1'b0;
 			end
 		end
 		else begin
@@ -193,15 +197,70 @@ module CHIP ( clk, reset, pixel_in0, pixel_in1, pixel_in2, pixel_in3, pixel_in4,
 		end
 	end
 
-	// load pixels into sub-modules, enable signals
+	// load pixels into sub-modules
 	always @(*) begin
 		if (state == LOAD_MOD) begin
-			
+			reg_3_in_w[0] = 5'd0;
+			reg_3_in_w[1] = 5'd0;
+			reg_3_in_w[2] = 5'd0;
+			reg_5_in_w[0] = 5'd0;
+			reg_5_in_w[1] = 5'd0;
+			reg_5_in_w[2] = 5'd0;
+			reg_5_in_w[3] = 5'd0;
+			reg_5_in_w[4] = 5'd0;
+			case (operation)
+				MED_FIL: begin
+					reg_3_in_w[0] = reg_img[ind_0_r];
+					reg_3_in_w[1] = reg_img[ind_1_r];
+					reg_3_in_w[2] = reg_img[ind_2_r];
+				end
+				GAU_FIL: begin
+					reg_5_in_w[0] = reg_img[ind_0_r];
+					reg_5_in_w[1] = reg_img[ind_1_r];
+					reg_5_in_w[2] = reg_img[ind_2_r];
+					reg_5_in_w[3] = reg_img[ind_3_r];
+					reg_5_in_w[4] = reg_img[ind_4_r];
+				end
+				SOBEL: begin
+					reg_3_in_w[0] = reg_img[ind_0_r];
+					reg_3_in_w[1] = reg_img[ind_1_r];
+					reg_3_in_w[2] = reg_img[ind_2_r];
+				end
+				NON_MAX: begin
+					reg_3_in_w[0] = reg_img[ind_0_r];
+					reg_3_in_w[1] = reg_img[ind_1_r];
+					reg_3_in_w[2] = reg_img[ind_2_r];
+				end
+				HYSTER: begin
+					reg_3_in_w[0] = reg_img[ind_0_r];
+					reg_3_in_w[1] = reg_img[ind_1_r];
+					reg_3_in_w[2] = reg_img[ind_2_r];
+				end
+				default: begin
+					reg_3_in_w[0] = 5'd0;
+					reg_3_in_w[1] = 5'd0;
+					reg_3_in_w[2] = 5'd0;
+					reg_5_in_w[0] = 5'd0;
+					reg_5_in_w[1] = 5'd0;
+					reg_5_in_w[2] = 5'd0;
+					reg_5_in_w[3] = 5'd0;
+					reg_5_in_w[4] = 5'd0;
+				end
+			endcase
 		end
 		else begin
-			
+			reg_3_in_w[0] = 5'd0;
+			reg_3_in_w[1] = 5'd0;
+			reg_3_in_w[2] = 5'd0;
+			reg_5_in_w[0] = 5'd0;
+			reg_5_in_w[1] = 5'd0;
+			reg_5_in_w[2] = 5'd0;
+			reg_5_in_w[3] = 5'd0;
+			reg_5_in_w[4] = 5'd0;
 		end
 	end
+
+	// load enable signals
 
 	// load output to tmp & angle registers files, readable signals
 	always @(*) begin
@@ -215,7 +274,7 @@ module CHIP ( clk, reset, pixel_in0, pixel_in1, pixel_in2, pixel_in3, pixel_in4,
 
 	// determine col_end
 	always @(*) begin
-		if (state == LOAD_MOD) col_end = (ind_0_r == ind_col_end - 1) ? 1'b1 : 1'b0;
+		if (state == LOAD_MOD) col_end = (ind_0_r == ind_col_end_r) ? 1'b1 : 1'b0;
 		else col_end = 1'b0;
 	end
 
@@ -291,6 +350,18 @@ module CHIP ( clk, reset, pixel_in0, pixel_in1, pixel_in2, pixel_in3, pixel_in4,
 			ind_4_r    <= ind_4_w;
 			ind_col_end_r <= ind_col_end_w;
 			edge_out_r <= edge_out_w;
+		end
+	end
+
+	// LOAD_MOD
+	always @(posedge clk or poseedge reset) begin
+		if (reset) begin
+			for (i=0;i<3;i=i+1) reg_3_in_r[i] <= 5'd0;
+			for (i=0;i<5;i=i+1) reg_5_in_r[i] <= 5'd0;
+		end
+		else begin
+			for (i=0;i<3;i=i+1) reg_3_in_r[i] <= reg_3_in_w[i];
+			for (i=0;i<5;i=i+1) reg_5_in_r[i] <= reg_5_in_w[i];
 		end
 	end
 
