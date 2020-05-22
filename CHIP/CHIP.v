@@ -341,7 +341,7 @@ module CHIP ( clk, reset, pixel_in0, pixel_in1, pixel_in2, pixel_in3, pixel_in4,
 		end
 		else begin
 			state      <= state_next;
-			load_index <= load_index + 5;
+			load_index <= (state == LOAD_REG) ? load_index + 5 : 9'd0;
 			operation  <= operation_next;
 			ind_0_r    <= ind_0_w;
 			ind_1_r    <= ind_1_w;
