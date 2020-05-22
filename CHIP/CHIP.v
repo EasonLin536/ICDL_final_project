@@ -11,10 +11,13 @@ module CHIP ( clk, reset, pixel_in0, pixel_in1, pixel_in2, pixel_in3, pixel_in4,
 	// LOAD_REG
 	reg  [8:0] load_index; // calculate index when loading
 	
+	// input index
 	reg  [8:0] ind_0_r, ind_1_r, ind_2_r, ind_3_r, ind_4_r; // current index of pixel
 	reg  [8:0] ind_0_w, ind_1_w, ind_2_w, ind_3_w, ind_4_w;
 	reg  [8:0] ind_ang_r, ind_ang_w;
-	
+	// output index
+	reg  [8:0] ind_load_tmp_r, ind_load_tmp_w;
+	// indicators
 	reg  [8:0] ind_col_end_r, ind_col_end_w; // assign with ind_1 - 1, if ind_0 == ind_col_end -> col_end = 1'b0
 	reg        row_end, col_end; // determine kernel movement
 
@@ -37,17 +40,20 @@ module CHIP ( clk, reset, pixel_in0, pixel_in1, pixel_in2, pixel_in3, pixel_in4,
 	wire               [1:0] ang_in;
 	assign ang_in = reg_ang_r;
 
+	// enable of sub-modules : modify in LOAD_MOD
+	reg mf_en, gf_en, sb_en, nm_en, hy_en;
+	// readable of sub-modules
+	reg mf_read, gf_read, sb_read, nm_read, hy_read;
+
 	// output of sub-modules
 	wire [`BIT_LENGTH - 1:0] med_out;
 	wire [`BIT_LENGTH - 1:0] gau_out;
 	wire [`BIT_LENGTH - 1:0] sb_grad_out;
 	wire               [1:0] sb_ang_out;
 	wire [`BIT_LENGTH - 1:0] non_max_out;
-
-	// enable of sub-modules : modify in LOAD_MOD
-	reg mf_en, gf_en, sb_en, nm_en, hy_en;
-	// readable of sub-modules
-	reg mf_read, gf_read, sb_read, nm_read, hy_read;
+	reg  [`BIT_LENGTH - 1:0] load_tmp_r, load_tmp_w;
+	reg  [`BIT_LENGTH - 1:0] load_ang_r, load_ang_w;
+	assign load_ang_w = sb_read ? sb_ang_out : 2'd0;
 
 	// output register
 	reg edge_out_r;
@@ -57,10 +63,6 @@ module CHIP ( clk, reset, pixel_in0, pixel_in1, pixel_in2, pixel_in3, pixel_in4,
     integer i;
 
 // ================== States =================== //
-    wire mode; // chip's operation
-    parameter EDGE  = 1'd0;
-    parameter COLOR = 1'd1;
-
     reg [2:0] state, state_next;
     parameter LOAD_REG   = 3'd0;
     parameter SET_OP     = 3'd1;
@@ -148,7 +150,8 @@ module CHIP ( clk, reset, pixel_in0, pixel_in1, pixel_in2, pixel_in3, pixel_in4,
 			ind_2_w = 9'd40;
 			ind_3_w = 9'd60;
 			ind_4_w = 9'd80;
-			ind_ang_w = (operation == NON_MAX) ? 9'd19;
+			ind_ang_w = (operation == NON_MAX) ? 9'd19 : 9'd0;
+			ind_load_tmp_w = (operation == GAU_FIL) ? 9'd42 : 9'd21;
 		end
 		else begin
 			ind_0_w = ind_0_r;
@@ -157,6 +160,7 @@ module CHIP ( clk, reset, pixel_in0, pixel_in1, pixel_in2, pixel_in3, pixel_in4,
 			ind_3_w = ind_3_r;
 			ind_4_w = ind_4_r;
 			ind_ang_w = ind_ang_r;
+			ind_load_tmp_w = ind_load_tmp_r;
 		end
 	end
 
@@ -191,6 +195,8 @@ module CHIP ( clk, reset, pixel_in0, pixel_in1, pixel_in2, pixel_in3, pixel_in4,
 			ind_3_w = ind_3_r + 1;
 			ind_4_w = ind_4_r + 1;
 			ind_ang_w = (operation == NON_MAX) ? ind_ang_r + 1 : ind_ang_r;
+			ind_load_tmp_w = !col_end ? ind_load_tmp_r + 1 :
+							 (operation == GAU_FIL) ? load_tmp_r + 5 : load_tmp_r + 3;
 		end
 		else begin
 			ind_0_w = ind_0_r;
@@ -199,6 +205,7 @@ module CHIP ( clk, reset, pixel_in0, pixel_in1, pixel_in2, pixel_in3, pixel_in4,
 			ind_3_w = ind_3_r;
 			ind_4_w = ind_4_r;
 			ind_ang_w = ind_ang_r;
+			ind_load_tmp_w = ind_load_tmp_r;
 		end
 	end
 
@@ -275,34 +282,31 @@ module CHIP ( clk, reset, pixel_in0, pixel_in1, pixel_in2, pixel_in3, pixel_in4,
 		else reg_ang_w = 2'd0;
 	end
 
-	// load output to tmp, readable signals
+	// get output of submodules, readable signals
 	always @(*) begin
 		if (state == LOAD_MOD) begin
 			case (operation)
-				MED_FIL: begin
-					
-				end
-				GAU_FIL: begin
-					
-				end
-				SOBEL: begin
-					
-				end
-				NON_MAX: begin
-					
-				end
-				HYSTER: begin
-					
-				end
-				default: for (i=0;i<`TOTAL_REG;i=i+1) reg_tmp[i] = 5'd0;
+				MED_FIL: load_tmp_w = mf_read ? med_out : load_tmp_r;
+				GAU_FIL: load_tmp_w = gf_read ? gau_out : load_tmp_r;
+				SOBEL:   load_tmp_w = sb_read ? sb_grad_out : load_tmp_r;
+				NON_MAX: load_tmp_w = nm_read ? non_max_out : load_tmp_r;
+				default: load_tmp_w = load_tmp_r;
 			endcase
 		end
 		else begin
-			
+			load_tmp_w = 5'd0;
 		end
 	end
 
-	// load ang to ang registers, readable signals
+	// load output to tmp
+	always @(*) begin
+		reg_tmp[ind_load_tmp_r] = (state == LOAD_MOD) ? load_tmp_r : reg_tmp[ind_load_tmp_r];
+	end
+
+	// load ang to ang registers, readable signal
+	always @(*) begin
+		reg_angle[ind_load_tmp_r] = (state == LOAD_MOD && operation == SOBEL) ? load_ang_r : reg_angle[ind_load_tmp_r];
+	end
 
 	// determine col_end
 	always @(*) begin
@@ -369,7 +373,10 @@ module CHIP ( clk, reset, pixel_in0, pixel_in1, pixel_in2, pixel_in3, pixel_in4,
 			ind_3_r    <= 9'd0;
 			ind_4_r    <= 9'd0;
 			ind_ang_r  <= 9'd0;
+			ind_load_tmp_r <= 9'd0;
 			ind_col_end_r <= 9'd0;
+			load_tmp_r <= 5'd0;
+			load_ang_r <= 2'd0;
 			edge_out_r <= 1'b0;
 		end
 		else begin
@@ -382,12 +389,15 @@ module CHIP ( clk, reset, pixel_in0, pixel_in1, pixel_in2, pixel_in3, pixel_in4,
 			ind_3_r    <= ind_3_w;
 			ind_4_r    <= ind_4_w;
 			ind_ang_r  <= ind_ang_w;
+			ind_load_tmp_r <= ind_load_tmp_w;
 			ind_col_end_r <= ind_col_end_w;
+			load_tmp_r <= load_tmp_w;
+			load_ang_r <= load_ang_w;
 			edge_out_r <= edge_out_w;
 		end
 	end
 
-	// LOAD_MOD
+	// LOAD_MOD : load 3/5 input into submodules
 	always @(posedge clk or poseedge reset) begin
 		if (reset) begin
 			for (i=0;i<3;i=i+1) reg_3_in_r[i] <= 5'd0;
