@@ -15,6 +15,7 @@ module CHIP ( clk, reset, pixel_in0, pixel_in1, pixel_in2, pixel_in3, pixel_in4,
 	reg  [8:0] ind_0_r, ind_1_r, ind_2_r, ind_3_r, ind_4_r; // current row and col (lower right of the filter)
 	
 	reg  [8:0] ind_col_end_r, ind_col_end_w; // assign with ind_1 - 1, if ind_0 == ind_col_end -> col_end = 1'b0
+	reg  [8:0] ind_en_rise_r, ind_en_rise_w; // the index when enable signal rise
 	reg        row_end, col_end; // determine kernel movement
 
 	// LOAD_MOD
@@ -35,6 +36,7 @@ module CHIP ( clk, reset, pixel_in0, pixel_in1, pixel_in2, pixel_in3, pixel_in4,
 	reg                [1:0] reg_ang_r, reg_ang_w;
 	wire               [1:0] ang_in;
 	assign ang_in = reg_ang_r;
+	reg 					 enable_r, enable_w;
 
 	// output of sub-modules
 	wire [`BIT_LENGTH - 1:0] med_out;
@@ -44,7 +46,7 @@ module CHIP ( clk, reset, pixel_in0, pixel_in1, pixel_in2, pixel_in3, pixel_in4,
 	wire [`BIT_LENGTH - 1:0] non_max_out;
 
 	// enable of sub-modules : modify in LOAD_MOD
-	reg mf_en, gf_en, sb_en, nm_en, hy_en;
+	wire mf_en, gf_en, sb_en, nm_en, hy_en;
 	// readable of sub-modules
 	reg mf_read, gf_read, sb_read, nm_read, hy_read;
 
@@ -158,9 +160,10 @@ module CHIP ( clk, reset, pixel_in0, pixel_in1, pixel_in2, pixel_in3, pixel_in4,
 	end
 
 	/* PREPARE */
-	// assign ind_col_end
+	// assign ind_col_end & ind_en_rise
 	always @(*) begin
-		ind_col_end_w = (state == PREPARE) ? ind_1_r - 1 : ind_col_end_r;
+		ind_col_end_w = (state == PREPARE) ? (ind_1_r - 1) : ind_col_end_r;
+		ind_en_rise_w = (state == PREPARE) ? ((operation == GAU_FIL) ? (ind_0_r + 4) : (ind_0_r + 2)) : ind_en_rise_r;
 	end
 
 	// determine row_end
@@ -261,6 +264,16 @@ module CHIP ( clk, reset, pixel_in0, pixel_in1, pixel_in2, pixel_in3, pixel_in4,
 	end
 
 	// load enable signals
+	assign mf_en = (operation == MED_FIL) ? enable_r : 1'b0;
+	assign gf_en = (operation == GAU_FIL) ? enable_r : 1'b0;
+	assign sb_en = (operation == SOBEL  ) ? enable_r : 1'b0;
+	assign nm_en = (operation == NON_MAX) ? enable_r : 1'b0;
+	assign hy_en = (operation == HYSTER ) ? enable_r : 1'b0;
+
+	always @(*) begin
+		if (state == LOAD_MOD) enable_w = (ind_0_r == ind_en_rise_r) ? 1'b1 : ((ind_0_r == ind_col_end_r) ? 1'b0 : enable_r);
+		else enable_w = enable_r;
+	end
 
 	// load output to tmp & angle registers files, readable signals
 	always @(*) begin
@@ -338,6 +351,7 @@ module CHIP ( clk, reset, pixel_in0, pixel_in1, pixel_in2, pixel_in3, pixel_in4,
 			ind_4_r    <= 9'd0;
 			ind_col_end_r <= 9'd0;
 			edge_out_r <= 1'b0;
+			enable_r   <= 1'b0;
 		end
 		else begin
 			state      <= state_next;
@@ -350,6 +364,7 @@ module CHIP ( clk, reset, pixel_in0, pixel_in1, pixel_in2, pixel_in3, pixel_in4,
 			ind_4_r    <= ind_4_w;
 			ind_col_end_r <= ind_col_end_w;
 			edge_out_r <= edge_out_w;
+			enable_r   <= enable_w;
 		end
 	end
 
