@@ -41,10 +41,10 @@ module CHIP ( clk, reset, pixel_in0, pixel_in1, pixel_in2, pixel_in3, pixel_in4,
 	reg  [1:0] reg_ang_r, reg_ang_w;
 	wire [1:0] ang_in;
 	assign ang_in = reg_ang_r;
-	reg 					 enable_r, enable_w;
+	reg enable_r, enable_w;
 
 	// enable of sub-modules : modify in LOAD_MOD
-	reg mf_en, gf_en, sb_en, nm_en, hy_en;
+	wire mf_en, gf_en, sb_en, nm_en, hy_en;
 	// readable of sub-modules
 	reg mf_read, gf_read, sb_read, nm_read, hy_read;
 
@@ -56,7 +56,8 @@ module CHIP ( clk, reset, pixel_in0, pixel_in1, pixel_in2, pixel_in3, pixel_in4,
 	wire [`BIT_LENGTH - 1:0] non_max_out;
 	// sub-modules' registers
 	reg  [`BIT_LENGTH - 1:0] load_tmp_r, load_tmp_w;
-	reg                [1:0] load_ang_r, load_ang_w;
+	reg                [1:0] load_ang_r;
+	wire               [1:0] load_ang_w;
 	assign load_ang_w = sb_read ? sb_ang_out : 2'd0;
 
 	// chip output register
@@ -199,7 +200,7 @@ module CHIP ( clk, reset, pixel_in0, pixel_in1, pixel_in2, pixel_in3, pixel_in4,
 			ind_3_w = ind_3_r + 1;
 			ind_4_w = ind_4_r + 1;
 			ind_ang_w = (operation == NON_MAX) ? ind_ang_r + 1 : ind_ang_r;
-			ind_load_tmp_w = col_end ? (operation == GAU_FIL) ? : load_tmp_r + 5 : load_tmp_r + 3 : ind_load_tmp_r + 1;
+			ind_load_tmp_w = col_end ? (operation == GAU_FIL) ?  load_tmp_r + 5 : load_tmp_r + 3 : ind_load_tmp_r + 1;
 		end
 		else begin
 			ind_0_w = ind_0_r;
@@ -334,19 +335,29 @@ module CHIP ( clk, reset, pixel_in0, pixel_in1, pixel_in2, pixel_in3, pixel_in4,
 			for (i=0;i<`TOTAL_REG;i=i+1) reg_img[i] = reg_tmp[i];
 			if (operation == GAU_FIL) begin
 				// 4 corners
-				reg_img[0:1]     = reg_img[42];
-				reg_img[20:21]   = reg_img[42];
-				reg_img[18:19]   = reg_img[57];
-				reg_img[38:39]   = reg_img[57];
-				reg_img[360:361] = reg_img[342];
-				reg_img[380:381] = reg_img[342];
-				reg_img[378:379] = reg_img[357];
-				reg_img[398:399] = reg_img[357];
+				reg_img[0]     = reg_img[42];
+				reg_img[1]     = reg_img[42];
+				reg_img[20]   = reg_img[42];
+				reg_img[21]   = reg_img[42];
+				reg_img[18]   = reg_img[57];
+				reg_img[19]   = reg_img[57];
+				reg_img[38]   = reg_img[57];
+				reg_img[39]   = reg_img[57];
+				reg_img[360] = reg_img[342];
+				reg_img[361] = reg_img[342];
+				reg_img[380] = reg_img[342];
+				reg_img[381] = reg_img[342];
+				reg_img[378] = reg_img[357];
+				reg_img[379] = reg_img[357];
+				reg_img[398] = reg_img[357];
+				reg_img[399] = reg_img[357];
 				// horizontal sides
-				reg_img[2:17]    = reg_img[42:57];
-				reg_img[22:37]   = reg_img[42:57];
-				reg_img[362:377] = reg_img[342:357];
-				reg_img[382:397] = reg_img[342:357];
+				for (i=0;i<16;i=i+1) begin
+					reg_img[i+2] = reg_img[i+42];
+					reg_img[i+22] = reg_img[i+42];
+					reg_img[i+362] = reg_img[i+342];
+					reg_img[i+382] = reg_img[i+342];
+				end
 				// vertical sides
 				for (i=40;i<360;i=i+20) begin
 					reg_img[i]    = reg_img[i+2];
@@ -362,8 +373,10 @@ module CHIP ( clk, reset, pixel_in0, pixel_in1, pixel_in2, pixel_in3, pixel_in4,
 				reg_img[380] = reg_img[361];
 				reg_img[399] = reg_img[378];
 				// horizontal sides
-				reg_img[1:18]    = reg_img[21:38];
-				reg_img[381:398] = reg_img[361:378];
+				for (i=0;i<18;i=i+1) begin
+					reg_img[i+1] = reg_img[i+21];
+					reg_img[i+381] = reg_img[i+361];
+				end
 				// vertical sides
 				for (i=20;i<380;i=i+20) begin
 					reg_img[i]    = reg_img[i+1];
@@ -415,7 +428,7 @@ module CHIP ( clk, reset, pixel_in0, pixel_in1, pixel_in2, pixel_in3, pixel_in4,
 	end
 
 	// LOAD_MOD : load 3/5 input into submodules
-	always @(posedge clk or poseedge reset) begin
+	always @(posedge clk or posedge reset) begin
 		if (reset) begin
 			for (i=0;i<3;i=i+1) reg_3_in_r[i] <= 5'd0;
 			for (i=0;i<5;i=i+1) reg_5_in_r[i] <= 5'd0;

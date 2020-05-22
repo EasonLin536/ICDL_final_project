@@ -10,10 +10,12 @@ module tb();
 	// parameter OUT_LENGTH    = 100;
 	// parameter DATA_LENGTH   = OUT_LENGTH + 2;  // padding
 
-	reg        clk, reset, mode, load_end;
+	reg        clk, reset, load_end;
 	reg  [4:0] pixel_in0;
 	reg  [4:0] pixel_in1;
 	reg  [4:0] pixel_in2;
+	reg  [4:0] pixel_in3;
+	reg  [4:0] pixel_in4;
 	wire [4:0] pixel_out;
 	wire [4:0] edge_out;
     // wire       readable;
@@ -28,7 +30,7 @@ module tb();
 	// integer    i, j, out_f, err, pattern_num;
 	// reg        over;
 
-	CHIP chip ( clk, reset, mode, pixel_in0, pixel_in1, pixel_in2, edge_out, pixel_out, load_end );
+	CHIP chip ( clk, reset, pixel_in0, pixel_in1, pixel_in2, pixel_in3, pixel_in4, edge_out, pixel_out, load_end );
 	
 	// initial	$readmemb (`PIXEL1,  pixel1_mem);
 	// initial	$readmemb (`PIXEL2,  pixel2_mem);
@@ -69,6 +71,8 @@ module tb();
 			pixel_in0 = k[4:0];
 			pixel_in1 = k[4:0];
 			pixel_in2 = k[4:0];
+			pixel_in3 = k[4:0];
+			pixel_in4 = k[4:0];
 			#(`CYCLE);
 		end
 		// pixel_in0 = 5'd1;
