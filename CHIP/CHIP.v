@@ -46,7 +46,7 @@ module CHIP ( clk, reset, pixel_in0, pixel_in1, pixel_in2, pixel_in3, pixel_in4,
 	// enable of sub-modules : modify in LOAD_MOD
 	wire mf_en, gf_en, sb_en, nm_en, hy_en;
 	// readable of sub-modules
-	reg mf_read, gf_read, sb_read, nm_read, hy_read;
+	wire mf_read, gf_read, sb_read, nm_read, hy_read;
 
 	// output of sub-modules
 	wire [`BIT_LENGTH - 1:0] med_out;
@@ -61,7 +61,8 @@ module CHIP ( clk, reset, pixel_in0, pixel_in1, pixel_in2, pixel_in3, pixel_in4,
 	assign load_ang_w = sb_read ? sb_ang_out : 2'd0;
 
 	// chip output register
-	reg edge_out_r, edge_out_w;
+	reg edge_out_r;
+	wire edge_out_w;
 
 	// for loops
     integer i;
@@ -91,19 +92,19 @@ module CHIP ( clk, reset, pixel_in0, pixel_in1, pixel_in2, pixel_in3, pixel_in4,
 // =========== Declare Sub-Modules ============= //
 	Median_Filter mf(.clk(clk), .reset(reset), .enable(mf_en),
 					 .pixel_in0(in3_0), .pixel_in1(in3_1), .pixel_in2(in3_2),
-					 .pixel_out(med_out), .readable(mf_read));
+					 .pixel_out(med_out), .readable(mf_read) );
 	Gaussian_Filter gf(.clk(clk), .reset(reset), .enable(gf_en),
 					   .pixel_in0(in5_0), .pixel_in1(in5_1), .pixel_in2(in5_2), .pixel_in3(in5_3), .pixel_in4(in5_4),
-					   .pixel_out(gau_out), .readable(gf_read));
+					   .pixel_out(gau_out), .readable(gf_read) );
 	Sobel sb(.clk(clk), .reset(reset), .enable(sb_en),
 			 .pixel_in0(in3_0), .pixel_in1(in3_1), .pixel_in2(in3_2),
-			 .pixel_out(sb_grad_out), .angle_out(sb_ang_out), .readable(sb_read));
+			 .pixel_out(sb_grad_out), .angle_out(sb_ang_out), .readable(sb_read) );
 	NonMax nm(.clk(clk), .reset(reset), .enable(nm_en),
 			  .angle(ang_in), .pixel_in0(in3_0), .pixel_in1(in3_1), .pixel_in2(in3_2),
-			  .pixel_out(non_max_out), .readable(nm_read));
+			  .pixel_out(non_max_out), .readable(nm_read) );
 	Hyster hy(.clk(clk), .reset(reset), .enable(hy_en),
 			  .pixel_in0(in3_0), .pixel_in1(in3_1), .pixel_in2(in3_2),
-			  .pixel_out(edge_out_w), .readable(readable));
+			  .pixel_out(edge_out_w), .readable(readable) );
 
 // =============== Combinational =============== //
 	/* FSM */
