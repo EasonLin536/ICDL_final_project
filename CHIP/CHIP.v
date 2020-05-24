@@ -75,6 +75,7 @@ module CHIP ( clk, reset, pixel_in0, pixel_in1, pixel_in2, pixel_in3, pixel_in4,
 	// chip output register
 	reg  edge_out_r;
 	wire edge_out_w;
+	assign edge_out = edge_out_w;
 
 	// for loops
     integer i;
@@ -225,9 +226,9 @@ module CHIP ( clk, reset, pixel_in0, pixel_in1, pixel_in2, pixel_in3, pixel_in4,
 
 	always @(*) begin
 		if (state == SET_OP) begin
-			ind_load_tmp_w = (operation == GAU_FIL) ? 9'd42 : 9'd21; // different starting index when loading sub-modules' output to reg_tmp
+			ind_load_tmp_w = (operation_next == GAU_FIL) ? 9'd42 : 9'd21; // different starting index when loading sub-modules' output to reg_tmp
 		end
-		else if (state == LOAD_MOD && sub_read_r) begin
+		else if (state == LOAD_MOD) begin
 			case (operation)
 				// MED_FIL: ind_load_tmp_w = mf_read ? (col_end_r ? ind_load_tmp_r + 3 : ind_load_tmp_r + 1) : ind_load_tmp_r;
 				// GAU_FIL: ind_load_tmp_w = gf_read ? (col_end_r ? ind_load_tmp_r + 5 : ind_load_tmp_r + 1) : ind_load_tmp_r;
@@ -235,12 +236,14 @@ module CHIP ( clk, reset, pixel_in0, pixel_in1, pixel_in2, pixel_in3, pixel_in4,
 				// NON_MAX: ind_load_tmp_w = nm_read ? (col_end_r ? ind_load_tmp_r + 3 : ind_load_tmp_r + 1) : ind_load_tmp_r;
 				// HYSTER:  ind_load_tmp_w = hy_read ? (col_end_r ? ind_load_tmp_r + 3 : ind_load_tmp_r + 1) : ind_load_tmp_r;
 				// default: ind_load_tmp_w = ind_load_tmp_r;
-				MED_FIL: ind_load_tmp_w = mf_read ? ind_load_tmp_r + 1 : ind_load_tmp_r;
-				GAU_FIL: ind_load_tmp_w = gf_read ? ind_load_tmp_r + 1 : ind_load_tmp_r;
-				SOBEL:   ind_load_tmp_w = sb_read ? ind_load_tmp_r + 1 : ind_load_tmp_r;
-				NON_MAX: ind_load_tmp_w = nm_read ? ind_load_tmp_r + 1 : ind_load_tmp_r;
-				HYSTER:  ind_load_tmp_w = hy_read ? ind_load_tmp_r + 1 : ind_load_tmp_r;
-				default: ind_load_tmp_w = ind_load_tmp_r;
+				GAU_FIL: begin
+					if (state_next == PREPARE) ind_load_tmp_w = ind_load_tmp_r + 5;
+					else ind_load_tmp_w = sub_read_r || col_end_r ? ind_load_tmp_r + 1 : ind_load_tmp_r;
+				end
+				default: begin
+					if (state_next == PREPARE) ind_load_tmp_w = ind_load_tmp_r + 3;
+					else ind_load_tmp_w = sub_read_r || col_end_r ? ind_load_tmp_r + 1 : ind_load_tmp_r;
+				end
 			endcase
 		end
 		else ind_load_tmp_w = ind_load_tmp_r;
@@ -303,10 +306,10 @@ module CHIP ( clk, reset, pixel_in0, pixel_in1, pixel_in2, pixel_in3, pixel_in4,
 	always @(*) begin
 		if (state == LOAD_MOD) begin
 			case (operation)
-				MED_FIL: load_tmp_w = mf_read ? med_out : load_tmp_r;
-				GAU_FIL: load_tmp_w = gf_read ? gau_out : load_tmp_r;
-				SOBEL:   load_tmp_w = sb_read ? sb_grad_out : load_tmp_r;
-				NON_MAX: load_tmp_w = nm_read ? non_max_out : load_tmp_r;
+				MED_FIL: load_tmp_w = med_out;
+				GAU_FIL: load_tmp_w = gau_out;
+				SOBEL:   load_tmp_w = sb_grad_out;
+				NON_MAX: load_tmp_w = non_max_out;
 				default: load_tmp_w = load_tmp_r;
 			endcase
 		end
@@ -315,7 +318,7 @@ module CHIP ( clk, reset, pixel_in0, pixel_in1, pixel_in2, pixel_in3, pixel_in4,
 		end
 	end
 
-	// load output to reg_tmp
+	// load output to reg_tmp only when state LOAD_MOD
 	always @(*) begin
 		reg_tmp[ind_load_tmp_r] = (state == LOAD_MOD) ? load_tmp_r : reg_tmp[ind_load_tmp_r];
 	end
