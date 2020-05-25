@@ -354,7 +354,7 @@ def Sobel(img, debug=False, file=False):
         with open("pattern/Sobel/out_square_grad", 'w') as f:
             square = []
             for i in range(18):
-                square.append(' '.join(map("{0:05b}".format, golden_grad[18*i:18*(i+1)])))
+                square.append(' '.join(map(str, golden_grad[18*i:18*(i+1)])))
             f.write('\n'.join(square))
         with open("pattern/Sobel/out_square_ang", 'w') as f:
             square = []
