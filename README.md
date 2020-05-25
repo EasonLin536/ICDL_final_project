@@ -1,11 +1,11 @@
-# Edge Detection Chip
+# Canny Edge Detection
 
 2020_spring IC Design Lab final project, NTUEE
 
 ## Introduction
-We implemented the edge part of **Dade Toonify**<sup>[1](#Reference)</sup> in verilog.
+We implemented the edge part of **Dade Toonify**<sup>[1](#Reference)</sup> in verilog. The color is quite simple, apply median filter and gaussian filter on the image pixels R, G, B. Quantize the colors to desired number. We decide to implement this part with python. Combine the abovw two, we can create cartoon effect on any image.
 
-CHIP/CHIP.v is the top module, and all sub-modules bave there own directories. In Testbench/pattern, contains all test patterns for each step, which are generated with Testbench/bitwise_full.py.
+CHIP/CHIP.v is the top module, and all sub-modules have their own directories. In Testbench/pattern, contains all test patterns for each step, which are generated with Testbench/bitwise_full.py.
 
 We load in 20*20 pixels of gray scale image per tile. The output is 1 or 0, indicating a edge or not.
 
