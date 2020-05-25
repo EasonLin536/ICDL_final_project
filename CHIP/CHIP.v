@@ -66,11 +66,11 @@ module CHIP ( clk, reset, pixel_in0, pixel_in1, pixel_in2, pixel_in3, pixel_in4,
 	wire sub_reset;
 
 	// output of sub-modules
-	wire [`BIT_LENGTH - 1:0] med_out;
-	wire [`BIT_LENGTH - 1:0] gau_out;
+	wire [`BIT_LENGTH - 1:0] mf_out;
+	wire [`BIT_LENGTH - 1:0] gf_out;
 	wire [`BIT_LENGTH - 1:0] sb_grad_out;
 	wire               [1:0] sb_ang_out;
-	wire [`BIT_LENGTH - 1:0] non_max_out;
+	wire [`BIT_LENGTH - 1:0] nm_out;
 	
 	// sub-modules' registers
 	reg  [`BIT_LENGTH - 1:0] load_tmp_r, load_tmp_w; // pixel
@@ -79,9 +79,9 @@ module CHIP ( clk, reset, pixel_in0, pixel_in1, pixel_in2, pixel_in3, pixel_in4,
 	assign load_ang_w = sb_read ? sb_ang_out : 2'd0;
 
 	// debug
-	assign debug_pixel = load_tmp_r;
-	assign debug_angle = load_ang_r;
-	assign readable = sub_read_r;
+	assign debug_pixel = nm_out;
+	assign debug_angle = sb_ang_out;
+	assign readable = nm_read;
 
 	// chip output register
 	reg  edge_out_r;
@@ -115,11 +115,11 @@ module CHIP ( clk, reset, pixel_in0, pixel_in1, pixel_in2, pixel_in3, pixel_in4,
 // =========== Declare Sub-Modules ============= //
 	Median_Filter mf ( .clk(clk), .reset(sub_reset), .enable(mf_en),
 					   .pixel_in0(in3_0), .pixel_in1(in3_1), .pixel_in2(in3_2),
-					   .pixel_out(med_out), .readable(mf_read) );
+					   .pixel_out(mf_out), .readable(mf_read) );
 	
 	Gaussian_Filter gf ( .clk(clk), .reset(sub_reset), .enable(gf_en),
 					     .pixel_in0(in5_0), .pixel_in1(in5_1), .pixel_in2(in5_2), .pixel_in3(in5_3), .pixel_in4(in5_4),
-					     .pixel_out(gau_out), .readable(gf_read) );
+					     .pixel_out(gf_out), .readable(gf_read) );
 	
 	Sobel sb ( .clk(clk), .reset(sub_reset), .enable(sb_en),
 			   .pixel_in0(in3_0), .pixel_in1(in3_1), .pixel_in2(in3_2),
@@ -127,7 +127,7 @@ module CHIP ( clk, reset, pixel_in0, pixel_in1, pixel_in2, pixel_in3, pixel_in4,
 	
 	NonMax nm ( .clk(clk), .reset(sub_reset), .enable(nm_en),
 			    .angle(ang_in), .pixel_in0(in3_0), .pixel_in1(in3_1), .pixel_in2(in3_2),
-			    .pixel_out(non_max_out), .readable(nm_read) );
+			    .pixel_out(nm_out), .readable(nm_read) );
 	
 	Hyster hy ( .clk(clk), .reset(sub_reset), .enable(hy_en),
 			    .pixel_in0(in3_0), .pixel_in1(in3_1), .pixel_in2(in3_2),
@@ -242,11 +242,11 @@ module CHIP ( clk, reset, pixel_in0, pixel_in1, pixel_in2, pixel_in3, pixel_in4,
 		else if (state == LOAD_MOD) begin
 			case (operation)
 				GAU_FIL: begin
-					if (state_next == PREPARE) ind_load_tmp_w = ind_load_tmp_r + 5;
+					if (state_next == PREPARE) ind_load_tmp_w = ind_load_tmp_r + 4;
 					else ind_load_tmp_w = (sub_read_r || col_end_r) ? ind_load_tmp_r + 1 : ind_load_tmp_r;
 				end
 				default: begin
-					if (state_next == PREPARE) ind_load_tmp_w = ind_load_tmp_r + 3;
+					if (state_next == PREPARE) ind_load_tmp_w = ind_load_tmp_r + 2;
 					else ind_load_tmp_w = (sub_read_r || col_end_r) ? ind_load_tmp_r + 1 : ind_load_tmp_r;
 				end
 			endcase
@@ -298,7 +298,7 @@ module CHIP ( clk, reset, pixel_in0, pixel_in1, pixel_in2, pixel_in3, pixel_in4,
 	always @(*) begin
 		if (state == LOAD_MOD) begin
 			if (ind_0_r == ind_en_rise_r) enable_w = 1'b1;
-			else enable_w = (ind_0_r == ind_col_end_r) ? 1'b0 : enable_r;
+			else enable_w = (ind_0_r == ind_col_end_r + 1) ? 1'b0 : enable_r;
 		end
 		else enable_w = enable_r;
 	end
@@ -307,10 +307,10 @@ module CHIP ( clk, reset, pixel_in0, pixel_in1, pixel_in2, pixel_in3, pixel_in4,
 	always @(*) begin
 		if (state == LOAD_MOD) begin
 			case (operation)
-				MED_FIL: load_tmp_w = med_out;
-				GAU_FIL: load_tmp_w = gau_out;
+				MED_FIL: load_tmp_w = mf_out;
+				GAU_FIL: load_tmp_w = gf_out;
 				SOBEL:   load_tmp_w = sb_grad_out;
-				NON_MAX: load_tmp_w = non_max_out;
+				NON_MAX: load_tmp_w = nm_out;
 				default: load_tmp_w = load_tmp_r;
 			endcase
 		end
