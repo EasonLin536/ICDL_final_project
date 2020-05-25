@@ -76,6 +76,7 @@ def comparator(a, b):
 
 def Median(img, debug=False, file=False):
     H, W = img.shape
+    Padding(img, noPad=True, printPad=True)
     serial = SerialIn(img, kernal_size=3)
 
     img_med = []
@@ -139,6 +140,11 @@ def Median(img, debug=False, file=False):
     if file:
         with open("pattern/Median/out_golden.dat", 'w') as f:
             f.write('\n'.join(map("{0:05b}".format, golden)))
+        with open("pattern/Median/out_square", 'w') as f:
+            square = []
+            for i in range(18):
+                square.append(' '.join(map("{0:05b}".format, golden[18*i:18*(i+1)])))
+            f.write('\n'.join(square))
 
     # return type should be a 2-dimensional numpy array representing the grayscale of the image.
     # Elements in the numpy array should be integer type within 0~31.
@@ -224,6 +230,11 @@ def Gaussian(img, debug=False, file=False):
     if file:
         with open("pattern/Gaussian/out_golden.dat", 'w') as f:
             f.write('\n'.join(map("{0:05b}".format, golden)))
+        with open("pattern/Gaussian/out_square", 'w') as f:
+            square = []
+            for i in range(16):
+                square.append(' '.join(map("{0:05b}".format, golden[16*i:16*(i+1)])))
+            f.write('\n'.join(square))
 
     # return type should be a 2-dimensional numpy array representing the grayscale of the image.
     # Elements in the numpy array should be integer type within 0~31.
@@ -342,6 +353,16 @@ def Sobel(img, debug=False, file=False):
             f.write('\n'.join(map("{0:05b}".format, golden_grad)))
         with open("pattern/Sobel/golden_ang.dat", 'w') as f:
             f.write('\n'.join(map("{0:02b}".format, golden_ang)))
+        with open("pattern/Sobel/out_square_grad", 'w') as f:
+            square = []
+            for i in range(18):
+                square.append(' '.join(map("{0:05b}".format, golden_grad[18*i:18*(i+1)])))
+            f.write('\n'.join(square))
+        with open("pattern/Median/out_square_ang", 'w') as f:
+            square = []
+            for i in range(18):
+                square.append(' '.join(map("{0:05b}".format, golden_ang[18*i:18*(i+1)])))
+            f.write('\n'.join(square))
 
     # First return:     return type should be a 2-dimensional numpy array representing the gradient of the image.
     #                   Elements in the numpy array should be integer type within 0~31.
@@ -406,6 +427,11 @@ def nonMax(gradient, angle, debug=False, file=False):
     if file:
         with open("pattern/nonMax/out_golden.dat", 'w') as f:
             f.write('\n'.join(map("{0:05b}".format, golden)))
+        with open("pattern/Median/out_square", 'w') as f:
+            square = []
+            for i in range(18):
+                square.append(' '.join(map("{0:05b}".format, golden[18*i:18*(i+1)])))
+            f.write('\n'.join(square))
 
     # return type should be a 2-dimensional numpy array representing the modified gradient of the image.
     # Elements in the numpy array should be integer type within 0~31.
@@ -461,6 +487,11 @@ def Hysteresis(img, debug=False, file=False):
     if file:
         with open("pattern/Hysteresis/out_golden.dat", 'w') as f:
             f.write('\n'.join(map("{0:01b}".format, golden)))
+        with open("pattern/Median/out_square", 'w') as f:
+            square = []
+            for i in range(18):
+                square.append(' '.join(map("{0:05b}".format, golden[18*i:18*(i+1)])))
+            f.write('\n'.join(square))
     # return type should be a 2-dimensional numpy array representing the modified gradient of the image.
     # Elements in the numpy array should be ???(True or False?).
     return np.array(img_med)

@@ -10,7 +10,7 @@
 module tb();
 
 	parameter DATA_LENGTH = 80;
-	parameter OUT_LENGTH  = ;
+	parameter OUT_LENGTH  = 78;
 
 	reg        clk, reset, load_end;
 	reg  [4:0] pixel_in0;
