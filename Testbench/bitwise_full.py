@@ -143,7 +143,7 @@ def Median(img, debug=False, file=False):
         with open("pattern/Median/out_square", 'w') as f:
             square = []
             for i in range(18):
-                square.append(' '.join(map("{0:05b}".format, golden[18*i:18*(i+1)])))
+                square.append(' '.join(map(str, golden[18*i:18*(i+1)])))
             f.write('\n'.join(square))
 
     # return type should be a 2-dimensional numpy array representing the grayscale of the image.
@@ -233,7 +233,7 @@ def Gaussian(img, debug=False, file=False):
         with open("pattern/Gaussian/out_square", 'w') as f:
             square = []
             for i in range(16):
-                square.append(' '.join(map("{0:05b}".format, golden[16*i:16*(i+1)])))
+                square.append(' '.join(map(str, golden[16*i:16*(i+1)])))
             f.write('\n'.join(square))
 
     # return type should be a 2-dimensional numpy array representing the grayscale of the image.
@@ -359,7 +359,7 @@ def Sobel(img, debug=False, file=False):
         with open("pattern/Sobel/out_square_ang", 'w') as f:
             square = []
             for i in range(18):
-                square.append(' '.join(map("{0:05b}".format, golden_ang[18*i:18*(i+1)])))
+                square.append(' '.join(map(str, golden_ang[18*i:18*(i+1)])))
             f.write('\n'.join(square))
 
     # First return:     return type should be a 2-dimensional numpy array representing the gradient of the image.
@@ -428,7 +428,7 @@ def nonMax(gradient, angle, debug=False, file=False):
         with open("pattern/nonMax/out_square", 'w') as f:
             square = []
             for i in range(18):
-                square.append(' '.join(map("{0:05b}".format, golden[18*i:18*(i+1)])))
+                square.append(' '.join(map(str, golden[18*i:18*(i+1)])))
             f.write('\n'.join(square))
 
     # return type should be a 2-dimensional numpy array representing the modified gradient of the image.
@@ -488,7 +488,7 @@ def Hysteresis(img, debug=False, file=False):
         with open("pattern/Hysteresis/out_square", 'w') as f:
             square = []
             for i in range(18):
-                square.append(' '.join(map("{0:05b}".format, golden[18*i:18*(i+1)])))
+                square.append(' '.join(map(str, golden[18*i:18*(i+1)])))
             f.write('\n'.join(square))
     # return type should be a 2-dimensional numpy array representing the modified gradient of the image.
     # Elements in the numpy array should be ???(True or False?).
