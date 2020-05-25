@@ -9,6 +9,9 @@
 
 module tb();
 
+	parameter DATA_LENGTH = 80;
+	parameter OUT_LENGTH  = ;
+
 	reg        clk, reset, load_end;
 	reg  [4:0] pixel_in0;
 	reg  [4:0] pixel_in1;
@@ -16,10 +19,32 @@ module tb();
 	reg  [4:0] pixel_in3;
 	reg  [4:0] pixel_in4;
 	wire       edge_out;
+	wire [4:0] pixel_out;
+	wire [1:0] angle_out;
     
-	integer k;
-	
-	CHIP chip (clk, reset, pixel_in0, pixel_in1, pixel_in2, pixel_in3, pixel_in4, edge_out, load_end, readable);
+	reg  [4:0] pixel_mem  [0:OUT_LENGTH-1];
+	// reg  [4:0] angle_mem  [0:OUT_LENGTH-1];
+	reg  [4:0] pixel0_mem [0:DATA_LENGTH-1];
+	reg  [4:0] pixel1_mem [0:DATA_LENGTH-1];
+	reg  [4:0] pixel2_mem [0:DATA_LENGTH-1];
+	reg  [4:0] pixel3_mem [0:DATA_LENGTH-1];
+	reg  [4:0] pixel4_mem [0:DATA_LENGTH-1];
+	reg  [4:0] pixel_temp;
+	// reg  [4:0] angle_temp;
+
+	reg        stop;
+	integer    i, j, k, out_f, err, pattern_num;
+	reg        over;
+
+	CHIP chip (clk, reset, pixel_in0, pixel_in1, pixel_in2, pixel_in3, pixel_in4, edge_out, load_end, readable, pixel_out, angle_out);
+
+	initial	$readmemb (`PIXEL0,  pixel0_mem);
+	initial	$readmemb (`PIXEL1,  pixel1_mem);
+	initial	$readmemb (`PIXEL2,  pixel2_mem);
+	initial	$readmemb (`PIXEL3,  pixel3_mem);
+	initial	$readmemb (`PIXEL4,  pixel4_mem);
+	initial	$readmemb (`EXPECT,  pixel_mem);
+	initial	$readmemb (`EXPECT,  angle_mem);
 
 	initial begin
 		$dumpfile("CHIP.fsdb");
@@ -40,24 +65,54 @@ module tb();
 	always begin #(`CYCLE/2) clk = ~clk; end
 
 	initial begin
-		for (k=0;k<400;k=k+1) begin
-			if (k == 399) begin
-				load_end = 1'b1;
-			end
-
-			if (k % 5 == 0) #(`CYCLE);
+		for (i=0;i<DATA_LENGTH;i=i+1) begin
+			if (i==79) load_end = 1'b1;
 			
-			if (k % 5 == 0) pixel_in0 = k[4:0];
-			else if (k % 5 == 1) pixel_in1 = k[4:0];
-			else if (k % 5 == 2) pixel_in2 = k[4:0];
-			else if (k % 5 == 3) pixel_in3 = k[4:0];
-			else pixel_in4 = k[4:0];
+			#(`CYCLE);
 			
-			
+			pixel_in0 = pixel0_mem[i];
+			pixel_in1 = pixel1_mem[i];
+			pixel_in2 = pixel2_mem[i];
+			pixel_in3 = pixel3_mem[i];
+			pixel_in4 = pixel4_mem[i];
 		end
-		
-		#(`CYCLE*1200);
-		$finish;
+	end
+
+	always @(posedge clk or posedge readable) begin
+		if (j < OUT_LENGTH) begin
+			pixel_temp = pixel_mem[j];
+			j = j + 1;
+		end
+	end
+
+	always @(negedge clk) begin
+		if (readable) begin
+		    if (pixel_out !== pixel_temp) begin
+		        $display("ERROR at %d:output %d !=expect %d ", pattern_num, pixel_out, pixel_temp);
+			    $fdisplay(out_f,"ERROR at %d:output %d !=expect %d ", pattern_num, pixel_out, pixel_temp);
+		        err = err + 1 ;
+		    end
+
+		    pattern_num = pattern_num + 1; 
+			if (pattern_num === OUT_LENGTH) over = 1'b1;
+	    end
+	end
+
+	initial begin
+	    @(posedge over)      
+	    if (stop) begin
+	       	$display("---------------------------------------------\n");
+	       	if (err == 0)  begin
+	          	$display("All data have been generated successfully!\n");
+	          	$display("-------------------PASS-------------------\n");
+	       	end
+	       	else begin
+	          	$display("There are %d errors!\n", err);
+			end
+	         $display("---------------------------------------------\n");
+	    end
+	    
+	    #10 $finish;
 	end
 
 endmodule

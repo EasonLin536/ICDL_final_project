@@ -2,10 +2,13 @@
 `define BIT_LENGTH 5
 `define TOTAL_REG  `IMG_DIM * `IMG_DIM
 
-module CHIP ( clk, reset, pixel_in0, pixel_in1, pixel_in2, pixel_in3, pixel_in4, edge_out, load_end, readable );
+module CHIP ( clk, reset, pixel_in0, pixel_in1, pixel_in2, pixel_in3, pixel_in4, edge_out, load_end, readable, debug_pixel, debug_angle );
+	
 	input                      clk, reset, load_end; // load_end is high with the last 5 input pixels
 	input  [`BIT_LENGTH - 1:0] pixel_in0, pixel_in1, pixel_in2, pixel_in3, pixel_in4; // input 5 pixels per cycle
 	output                     edge_out, readable;
+	output [`BIT_LENGTH - 1:0] debug_pixel;
+	output               [1:0] debug_angle;
 
 // ================ Reg & Wires ================ //
 	// LOAD_REG
@@ -75,6 +78,11 @@ module CHIP ( clk, reset, pixel_in0, pixel_in1, pixel_in2, pixel_in3, pixel_in4,
 	wire               [1:0] load_ang_w;
 	assign load_ang_w = sb_read ? sb_ang_out : 2'd0;
 
+	// debug
+	assign debug_pixel = load_tmp_r;
+	assign debug_angle = load_ang_r;
+	assign readable = sub_read_r;
+
 	// chip output register
 	reg  edge_out_r;
 	wire edge_out_w;
@@ -123,7 +131,7 @@ module CHIP ( clk, reset, pixel_in0, pixel_in1, pixel_in2, pixel_in3, pixel_in4,
 	
 	Hyster hy ( .clk(clk), .reset(sub_reset), .enable(hy_en),
 			    .pixel_in0(in3_0), .pixel_in1(in3_1), .pixel_in2(in3_2),
-			    .pixel_out(edge_out_w), .readable(readable) );
+			    .pixel_out(edge_out_w), .readable(hy_read) );
 
 // ============ Finite State Machine =========== //
 	/* FSM */
@@ -485,4 +493,5 @@ module CHIP ( clk, reset, pixel_in0, pixel_in1, pixel_in2, pixel_in3, pixel_in4,
 			end
 		end
 	end
+
 endmodule
