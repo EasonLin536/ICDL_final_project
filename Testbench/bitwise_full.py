@@ -358,7 +358,7 @@ def Sobel(img, debug=False, file=False):
             for i in range(18):
                 square.append(' '.join(map("{0:05b}".format, golden_grad[18*i:18*(i+1)])))
             f.write('\n'.join(square))
-        with open("pattern/Median/out_square_ang", 'w') as f:
+        with open("pattern/Sobel/out_square_ang", 'w') as f:
             square = []
             for i in range(18):
                 square.append(' '.join(map("{0:05b}".format, golden_ang[18*i:18*(i+1)])))
@@ -427,7 +427,7 @@ def nonMax(gradient, angle, debug=False, file=False):
     if file:
         with open("pattern/nonMax/out_golden.dat", 'w') as f:
             f.write('\n'.join(map("{0:05b}".format, golden)))
-        with open("pattern/Median/out_square", 'w') as f:
+        with open("pattern/nonMax/out_square", 'w') as f:
             square = []
             for i in range(18):
                 square.append(' '.join(map("{0:05b}".format, golden[18*i:18*(i+1)])))
@@ -487,7 +487,7 @@ def Hysteresis(img, debug=False, file=False):
     if file:
         with open("pattern/Hysteresis/out_golden.dat", 'w') as f:
             f.write('\n'.join(map("{0:01b}".format, golden)))
-        with open("pattern/Median/out_square", 'w') as f:
+        with open("pattern/Hysteresis/out_square", 'w') as f:
             square = []
             for i in range(18):
                 square.append(' '.join(map("{0:05b}".format, golden[18*i:18*(i+1)])))
