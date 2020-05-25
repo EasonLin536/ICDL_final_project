@@ -5,13 +5,13 @@
 `define PIXEL2     "./pattern/pixel_in2.dat"
 `define PIXEL3     "./pattern/pixel_in3.dat"
 `define PIXEL4     "./pattern/pixel_in4.dat"
-`define PIXEL_EXPECT "./pattern/nm_out.dat"
-`define ANGLE_EXPECT "./pattern/sb_ang_out.dat"
+`define PIXEL_EXPECT "./pattern/sb_grad_out.dat" // modilfy for different module debugging
+`define ANGLE_EXPECT "./pattern/sb_ang_out.dat" // modilfy for different module debugging
 
 module tb();
 
 	parameter DATA_LENGTH = 80;
-	parameter OUT_LENGTH  = 18*18;
+	parameter OUT_LENGTH  = 18*18; // modilfy for different module debugging
 
 	reg        clk, reset, load_end;
 	reg  [4:0] pixel_in0;
@@ -93,11 +93,13 @@ module tb();
 			    $fdisplay(out_f,"ERROR at %d:output %d !=expect %d ", pattern_num, debug_pixel, pixel_temp);
 		        err = err + 1 ;
 		    end
-		    // if (debug_angle !== angle_temp) begin
-		    //     $display("ERROR at %d:output %d !=expect %d ", pattern_num, debug_angle, angle_temp);
-			   //  $fdisplay(out_f,"ERROR at %d:output %d !=expect %d ", pattern_num, debug_angle, angle_temp);
-		    //     err = err + 1 ;
-		    // end
+		    // modilfy for different module debugging : only when Sobel
+		    if (debug_angle !== angle_temp) begin
+		        $display("ERROR at %d:output %d !=expect %d ", pattern_num, debug_angle, angle_temp);
+			    $fdisplay(out_f,"ERROR at %d:output %d !=expect %d ", pattern_num, debug_angle, angle_temp);
+		        err = err + 1 ;
+		    end
+		    // comment out if not Sobel
 
 		    pattern_num = pattern_num + 1; 
 			if (pattern_num === OUT_LENGTH) over = 1'b1;

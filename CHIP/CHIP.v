@@ -79,9 +79,9 @@ module CHIP ( clk, reset, pixel_in0, pixel_in1, pixel_in2, pixel_in3, pixel_in4,
 	assign load_ang_w = sb_read ? sb_ang_out : 2'd0;
 
 	// debug
-	assign debug_pixel = nm_out;
+	assign debug_pixel = sb_grad_out; // modilfy for different module debugging
 	assign debug_angle = sb_ang_out;
-	assign readable = nm_read;
+	assign readable = sb_read; // modilfy for different module debugging
 
 	// chip output register
 	reg  edge_out_r;
@@ -213,7 +213,7 @@ module CHIP ( clk, reset, pixel_in0, pixel_in1, pixel_in2, pixel_in3, pixel_in4,
 			ind_2_w = 9'd40; // [row, col] = [2, 0]
 			ind_3_w = 9'd60; // [row, col] = [3, 0]
 			ind_4_w = 9'd80; // [row, col] = [4, 0]
-			ind_ang_w = (operation == NON_MAX) ? 9'd19 : 9'd0; // input 18 valid angle for 20 pixels
+			ind_ang_w = (operation_next == NON_MAX) ? 9'd19 : 9'd0; // input 18 valid angle for 20 pixels
 		end
 		// update ind_0~4_w if the col not ended
 		else if (state == LOAD_MOD && !col_end_r) begin
@@ -477,9 +477,13 @@ module CHIP ( clk, reset, pixel_in0, pixel_in1, pixel_in2, pixel_in3, pixel_in4,
 	// LOAD_REG
 	always @(posedge clk) begin
 		if (reset) begin
-			for (i=0;i<`TOTAL_REG;i=i+1) reg_img[i] <= 5'd0;
+			for (i=0;i<`TOTAL_REG;i=i+1) begin
+				reg_img[i] <= 5'd0;
+				reg_angle[i] <= 2'd0;
+			end
 		end
 		else begin
+			for (i=0;i<`TOTAL_REG;i=i+1) reg_angle[i] <= reg_angle[i];
 			if (state == LOAD_REG) begin
 				for (i=0;i<`TOTAL_REG;i=i+1) reg_img[i] <= reg_img[i];
 				reg_img[load_index]   <= pixel_in0;
