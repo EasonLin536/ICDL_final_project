@@ -312,18 +312,16 @@ def Sobel(img, debug=False, file=False):
             sum5=sobel_col5(A[2])
 
             
-            if count == 25:
-                print(A)
-                print(sum0)
-                print(0)
-                print(sum2)
-                print(sum3)
-                print(sum4)
-                print(sum5)
-                print()
+            # if count == 25:
+            #     print(A)
+            #     print(sum0)
+            #     print(0)
+            #     print(sum2)
+            #     print(sum3)
+            #     print(sum4)
+            #     print(sum5)
+            #     print()
             count += 1
-                
-
 
             Gx=sum0+sum2# 8 bits
             Gy=sum3+sum4+sum5# 8 bits
@@ -358,7 +356,7 @@ def Sobel(img, debug=False, file=False):
             for i in range(18):
                 square.append(' '.join(map("{0:05b}".format, golden_grad[18*i:18*(i+1)])))
             f.write('\n'.join(square))
-        with open("pattern/Median/out_square_ang", 'w') as f:
+        with open("pattern/Sobel/out_square_ang", 'w') as f:
             square = []
             for i in range(18):
                 square.append(' '.join(map("{0:05b}".format, golden_ang[18*i:18*(i+1)])))
@@ -427,7 +425,7 @@ def nonMax(gradient, angle, debug=False, file=False):
     if file:
         with open("pattern/nonMax/out_golden.dat", 'w') as f:
             f.write('\n'.join(map("{0:05b}".format, golden)))
-        with open("pattern/Median/out_square", 'w') as f:
+        with open("pattern/nonMax/out_square", 'w') as f:
             square = []
             for i in range(18):
                 square.append(' '.join(map("{0:05b}".format, golden[18*i:18*(i+1)])))
@@ -487,7 +485,7 @@ def Hysteresis(img, debug=False, file=False):
     if file:
         with open("pattern/Hysteresis/out_golden.dat", 'w') as f:
             f.write('\n'.join(map("{0:01b}".format, golden)))
-        with open("pattern/Median/out_square", 'w') as f:
+        with open("pattern/Hysteresis/out_square", 'w') as f:
             square = []
             for i in range(18):
                 square.append(' '.join(map("{0:05b}".format, golden[18*i:18*(i+1)])))
@@ -547,7 +545,7 @@ def main():
     #img_gau = convolve(img_med, gaussian_kernel(5))
     print("=== Sobel ===")
     img_grad, img_angle = Sobel(img_gau, file=True)
-    print(np.amax(img_grad))
+    # print(np.amax(img_grad))
     if save:
         Image.fromarray((img_grad*16).astype(np.uint8)).save("output/grad.jpg")
         Image.fromarray((img_angle*64).astype(np.uint8)).save("output/angle.jpg")
@@ -568,7 +566,7 @@ def main():
 
 def test():
     img = np.array([[1,2,3],[4,5,6],[7,8,9]])
-    print(Median(img))
+    # print(Median(img))
     print(medfilt2d(img.astype(np.uint8), 3))
 
 if __name__ == '__main__':
