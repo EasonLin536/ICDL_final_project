@@ -60,7 +60,7 @@ module CHIP ( clk, reset, pixel_in0, pixel_in1, pixel_in2, pixel_in3, pixel_in4,
 	// it takes a few cycles for the outputs to be written to reg_tmp
 	reg sub_read_r;
 	wire sub_read_w;
-	assign sub_read_w = mf_read | gf_read | sb_read | nm_read;
+	assign sub_read_w = mf_read | gf_read | sb_read | nm_read | hy_read;
 
 	// sub-modules are reset when state PREPARE
 	wire sub_reset;
@@ -79,9 +79,9 @@ module CHIP ( clk, reset, pixel_in0, pixel_in1, pixel_in2, pixel_in3, pixel_in4,
 	assign load_ang_w = sb_read ? sb_ang_out : 2'd0;
 
 	// debug
-	assign debug_pixel = sb_grad_out; // modilfy for different module debugging
+	assign debug_pixel = nm_out; // modilfy for different module debugging
 	assign debug_angle = sb_ang_out;
-	assign readable = sb_read; // modilfy for different module debugging
+	assign readable = hy_read; // modilfy for different module debugging
 
 	// chip output register
 	reg  edge_out_r;

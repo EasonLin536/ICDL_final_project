@@ -5,7 +5,7 @@
 `define PIXEL2     "./pattern/pixel_in2.dat"
 `define PIXEL3     "./pattern/pixel_in3.dat"
 `define PIXEL4     "./pattern/pixel_in4.dat"
-`define PIXEL_EXPECT "./pattern/sb_grad_out.dat" // modilfy for different module debugging
+`define PIXEL_EXPECT "./pattern/out_golden.dat" // modilfy for different module debugging
 `define ANGLE_EXPECT "./pattern/sb_ang_out.dat" // modilfy for different module debugging
 
 module tb();
@@ -88,18 +88,29 @@ module tb();
 			pixel_temp = pixel_mem[j];
 			angle_temp = angle_mem[j];
 			j = j + 1;
-		    if (debug_pixel !== pixel_temp) begin
-		        $display("ERROR at %d:output %d !=expect %d ", pattern_num, debug_pixel, pixel_temp);
-			    $fdisplay(out_f,"ERROR at %d:output %d !=expect %d ", pattern_num, debug_pixel, pixel_temp);
-		        err = err + 1 ;
-		    end
+			// modilfy for different module debugging : general operations
+		    // if (debug_pixel !== pixel_temp) begin
+		    //     $display("ERROR at %d:output %d !=expect %d ", pattern_num, debug_pixel, pixel_temp);
+			   //  $fdisplay(out_f,"ERROR at %d:output %d !=expect %d ", pattern_num, debug_pixel, pixel_temp);
+		    //     err = err + 1 ;
+		    // end
+		    // comment out if Sobel or Full
+
 		    // modilfy for different module debugging : only when Sobel
-		    if (debug_angle !== angle_temp) begin
-		        $display("ERROR at %d:output %d !=expect %d ", pattern_num, debug_angle, angle_temp);
-			    $fdisplay(out_f,"ERROR at %d:output %d !=expect %d ", pattern_num, debug_angle, angle_temp);
+		    // if (debug_angle !== angle_temp) begin
+		    //     $display("ERROR at %d:output %d !=expect %d ", pattern_num, debug_angle, angle_temp);
+			   //  $fdisplay(out_f,"ERROR at %d:output %d !=expect %d ", pattern_num, debug_angle, angle_temp);
+		    //     err = err + 1 ;
+		    // end
+		    // comment out if not Sobel
+
+		    // modilfy for different module debugging : only when Full(i.e. Hysteresis)
+		    if (edge_out !== pixel_temp) begin
+		        $display("ERROR at %d:output %d !=expect %d ", pattern_num, edge_out, pixel_temp);
+			    $fdisplay(out_f,"ERROR at %d:output %d !=expect %d ", pattern_num, edge_out, pixel_temp);
 		        err = err + 1 ;
 		    end
-		    // comment out if not Sobel
+		    // comment out if not Full(i.e. Hysteresis)
 
 		    pattern_num = pattern_num + 1; 
 			if (pattern_num === OUT_LENGTH) over = 1'b1;

@@ -367,8 +367,7 @@ def Sobel(img, debug=False, file=False):
     # Second return:    return type should be a 2-dimensional numpy array representing the edge angle of the image.
     #                   Elements in the numpy array should be 2-bit binary strings, ex: "01".
     img_grad_pad = Padding(np.array(img_gradient), padnum=1)
-    img_ang_pad = Padding(np.array(img_angle), padnum=1)
-    return img_grad_pad, img_ang_pad
+    return img_grad_pad, np.array(img_angle)
 # ================== Sobel Convolution================== #
 
 def nonMax(gradient, angle, debug=False, file=False):
@@ -379,11 +378,11 @@ def nonMax(gradient, angle, debug=False, file=False):
         golden = []
 
     img_med = []
-    for i in range(H-2):
+    for i in range(H):
         A = serial[i][0:2]
 
         med_row = []
-        for j in range(W-2):
+        for j in range(W):
             A.append(serial[i][j+2])
             ang = angle[i][j]
 
@@ -488,7 +487,7 @@ def Hysteresis(img, debug=False, file=False):
         with open("pattern/Hysteresis/out_square", 'w') as f:
             square = []
             for i in range(18):
-                square.append(' '.join(map(str, golden[18*i:18*(i+1)])))
+                square.append(' '.join(map(lambda x: str(int(x)), golden[18*i:18*(i+1)])))
             f.write('\n'.join(square))
     # return type should be a 2-dimensional numpy array representing the modified gradient of the image.
     # Elements in the numpy array should be ???(True or False?).
