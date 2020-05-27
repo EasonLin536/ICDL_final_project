@@ -13,7 +13,7 @@ We load in 20*20 pixels of gray scale image per tile. The output is 1 or 0, indi
 ### [Median Filter](https://en.wikipedia.org/wiki/Median_filter)
 Change the current pixel to the median of its adjacent pixels. Get rid of too much details, which would cause too many redundant edges.
 ### [Gaussian Filter](https://en.wikipedia.org/wiki/Gaussian_filter)
-Current pixel become the result of convolution with a 5*5 gaussian filter. Smooth the image, also prevent too many edges.
+Current pixel become the result of convolution with a 5x5 gaussian filter. Smooth the image, also prevent too many edges.
 ### [Sobel Gradient Calculation](https://en.wikipedia.org/wiki/Sobel_operator)
 Find the magnitude and the direction of gradient of the current pixel with sobel operators.
 ### [Non-Maximum Supression](https://en.wikipedia.org/wiki/Canny_edge_detector)
