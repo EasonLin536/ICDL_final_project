@@ -6,11 +6,12 @@ from PIL import Image
 from scipy.ndimage.filters import convolve
 from scipy.signal import medfilt2d
 
-width = 40 #900
+width = 60 #900
 height = 40  #600
 
 ## output data
 pixel_in = [[] for i in range(5)]
+pixel_out = []
 
 ## Utility funciton
 def grayscale(rgb):
@@ -454,6 +455,7 @@ def Hysteresis(img, debug=False, file=False):
     weak = 0
     strong = 2
 
+    global pixel_out
     if file:
         golden = []
 
@@ -485,6 +487,7 @@ def Hysteresis(img, debug=False, file=False):
 
 
             med_row.append(result)
+            pixel_out.append(result)
 
             if file:
                 golden.append(result)
@@ -531,7 +534,7 @@ def gaussian_kernel(size, sigma=1):
 def main():
     save = False
     split_size = 20
-    global height, width, pixel_in
+    global height, width, pixel_in, pixel_out
 
     orig_img = Image.open(sys.argv[1])
     orig_img = orig_img.resize((width, height), Image.ANTIALIAS)
@@ -541,43 +544,58 @@ def main():
         Image.fromarray((orig_img*4).astype(np.uint8)).save("output/init.jpg")
 
     img_list = split_img(orig_img, split_size)
+    bin_h = int(width/split_size)
+    bin_v = int(height/split_size)
+    image_result = [[] for _ in range(bin_v)]
 
     height = split_size - 2
     width = split_size - 2
 
     for i, img in enumerate(img_list):
         print("===== bin{} =====".format(i))
-        print("=== Median ===")
+        #print("=== Median ===")
         img_med = Median(img)
         if save:
             Image.fromarray((img_med*4).astype(np.uint8)).save("output/med.jpg")
 
-        print("=== Gaussian ===")
+        #print("=== Gaussian ===")
         img_gau = Gaussian(img_med)
         if save:
             Image.fromarray((img_gau*4).astype(np.uint8)).save("output/gau.jpg")
 
-        print("=== Sobel ===")
+        #print("=== Sobel ===")
         img_grad, img_angle = Sobel(img_gau)
         if save:
             Image.fromarray((img_grad*16).astype(np.uint8)).save("output/grad.jpg")
             Image.fromarray((img_angle*64).astype(np.uint8)).save("output/angle.jpg")
 
-        print("=== nonMax ===")
+        #print("=== nonMax ===")
         img_sup = nonMax(img_grad, img_angle)
         if save:
             Image.fromarray((img_sup*16).astype(np.uint8)).save("output/sup.jpg")
 
-        print("=== Hysteresis ===")
+        #print("=== Hysteresis ===")
         img_final = Hysteresis(img_sup)
         if save:
             Image.fromarray((img_final*255).astype(np.uint8)).save("output/final.jpg")
 
-        show_edge(img_final)
+        if i%bin_h == 0:
+            image_result[int(i/bin_h)] = img_final
+        else:
+            image_result[int(i/bin_h)] = np.concatenate((image_result[int(i/bin_h)], img_final),axis = 1)
+
+    image_final = image_result[0]
+    for i in range(1, len(image_result)):
+        image_final = np.concatenate((image_final, image_result[i]),axis = 0)
+
+    show_edge(image_final)
 
     for i in range(5):
         with open("pattern/input_pixel/pixel_in" + str(i) + ".dat", 'w') as f:
             f.write('\n'.join(pixel_in[i]))
+
+    with open("pattern/out_golden.dat", 'w') as f:
+            f.write('\n'.join(map("{0:01b}".format, pixel_out)))
 
 
 
@@ -586,5 +604,5 @@ def test():
     print(type(split_img(img, 2)))
 
 if __name__ == '__main__':
-    # main()
-    test()
+    main()
+    #test()

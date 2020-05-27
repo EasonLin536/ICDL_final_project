@@ -91,7 +91,16 @@ module Hyster ( clk, reset, pixel_in0, pixel_in1, pixel_in2, enable, pixel_out, 
 				end
 				pixel_out_n = 0;
 			end
-			default: state_n = over;
+			default: begin
+				state_n = over;
+				readable_n = 0;
+				for (i=0; i<3; i=i+1) begin
+					pixel_col0_n[i] = 5'b0;
+					pixel_col1_n[i] = 5'b0;
+					pixel_col2_n[i] = 5'b0;
+				end
+				pixel_out_n = 0;
+			end
 		endcase
 	end
 	
