@@ -6,7 +6,7 @@
 `define PIXEL3     "./pattern/pixel_in3.dat"
 `define PIXEL4     "./pattern/pixel_in4.dat"
 `define PIXEL_EXPECT "./pattern/out_golden.dat" // modilfy for different module debugging
-`define ANGLE_EXPECT "./pattern/sb_ang_out.dat" // modilfy for different module debugging
+// `define ANGLE_EXPECT "./pattern/sb_ang_out.dat" // modilfy for different module debugging
 
 module tb();
 
@@ -20,8 +20,8 @@ module tb();
 	reg  [4:0] pixel_in3;
 	reg  [4:0] pixel_in4;
 	wire       edge_out;
-	wire [4:0] debug_pixel;
-	wire [1:0] debug_angle;
+	// wire [4:0] debug_pixel;
+	// wire [1:0] debug_angle;
     
 	reg  [4:0] pixel_mem  [0:OUT_LENGTH-1];
 	reg  [4:0] angle_mem  [0:OUT_LENGTH-1];
@@ -31,13 +31,13 @@ module tb();
 	reg  [4:0] pixel3_mem [0:DATA_LENGTH-1];
 	reg  [4:0] pixel4_mem [0:DATA_LENGTH-1];
 	reg  [4:0] pixel_temp;
-	reg  [4:0] angle_temp;
+	// reg  [4:0] angle_temp;
 
 	reg        stop;
 	integer    i, j, k, out_f, err, pattern_num;
 	reg        over;
 
-	CHIP chip (clk, reset, pixel_in0, pixel_in1, pixel_in2, pixel_in3, pixel_in4, edge_out, load_end, readable, debug_pixel, debug_angle);
+	CHIP chip (clk, reset, pixel_in0, pixel_in1, pixel_in2, pixel_in3, pixel_in4, edge_out, load_end, readable);
 
 	initial	$readmemb (`PIXEL0, pixel0_mem);
 	initial	$readmemb (`PIXEL1, pixel1_mem);
@@ -45,7 +45,7 @@ module tb();
 	initial	$readmemb (`PIXEL3, pixel3_mem);
 	initial	$readmemb (`PIXEL4, pixel4_mem);
 	initial	$readmemb (`PIXEL_EXPECT, pixel_mem);
-	initial	$readmemb (`ANGLE_EXPECT, angle_mem);
+	// initial	$readmemb (`ANGLE_EXPECT, angle_mem);
 
 	initial begin
 		$dumpfile("CHIP.fsdb");
@@ -86,7 +86,7 @@ module tb();
 	always @(negedge clk) begin
 		if (j < OUT_LENGTH && readable) begin
 			pixel_temp = pixel_mem[j];
-			angle_temp = angle_mem[j];
+			// angle_temp = angle_mem[j];
 			j = j + 1;
 			// modilfy for different module debugging : general operations
 		    // if (debug_pixel !== pixel_temp) begin

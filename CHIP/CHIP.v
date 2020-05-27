@@ -2,13 +2,13 @@
 `define BIT_LENGTH 5
 `define TOTAL_REG  `IMG_DIM * `IMG_DIM
 
-module CHIP ( clk, reset, pixel_in0, pixel_in1, pixel_in2, pixel_in3, pixel_in4, edge_out, load_end, readable, debug_pixel, debug_angle );
+module CHIP ( clk, reset, pixel_in0, pixel_in1, pixel_in2, pixel_in3, pixel_in4, edge_out, load_end, readable);
 	
 	input                      clk, reset, load_end; // load_end is high with the last 5 input pixels
 	input  [`BIT_LENGTH - 1:0] pixel_in0, pixel_in1, pixel_in2, pixel_in3, pixel_in4; // input 5 pixels per cycle
 	output                     edge_out, readable;
-	output [`BIT_LENGTH - 1:0] debug_pixel;
-	output               [1:0] debug_angle;
+	// output [`BIT_LENGTH - 1:0] debug_pixel;
+	// output               [1:0] debug_angle;
 
 // ================ Reg & Wires ================ //
 	// LOAD_REG
@@ -51,6 +51,8 @@ module CHIP ( clk, reset, pixel_in0, pixel_in1, pixel_in2, pixel_in3, pixel_in4,
 
 	// enable of sub-modules : modify in LOAD_MOD
 	reg  enable_r, enable_w;
+	reg  readable_r;
+	wire readable_w;
 	wire mf_en, gf_en, sb_en, nm_en, hy_en;
 	
 	// readable of sub-modules
@@ -81,12 +83,13 @@ module CHIP ( clk, reset, pixel_in0, pixel_in1, pixel_in2, pixel_in3, pixel_in4,
 	// debug
 	assign debug_pixel = nm_out; // modilfy for different module debugging
 	assign debug_angle = sb_ang_out;
-	assign readable = hy_read; // modilfy for different module debugging
+	assign readable_w = hy_read;
+	assign readable = readable_r; // modilfy for different module debugging
 
 	// chip output register
 	reg  edge_out_r;
 	wire edge_out_w;
-	assign edge_out = edge_out_w;
+	assign edge_out = edge_out_r;
 
 	// for loops
     integer i;
@@ -423,6 +426,7 @@ module CHIP ( clk, reset, pixel_in0, pixel_in1, pixel_in2, pixel_in3, pixel_in4,
 			ind_col_end_r  <= 9'd0;
 			ind_en_rise_r  <= 9'd0;
 			enable_r       <= 1'b0;
+			readable_r     <= 1'b0;
 			// register of output of sub-modules
 			sub_read_r     <= 1'b0;
 			load_tmp_r     <= 5'd0; // pixel or gradient
@@ -451,6 +455,7 @@ module CHIP ( clk, reset, pixel_in0, pixel_in1, pixel_in2, pixel_in3, pixel_in4,
 			ind_col_end_r  <= ind_col_end_w;
 			ind_en_rise_r  <= ind_en_rise_w;
 			enable_r       <= enable_w;
+			readable_r     <= readable_w;
 			// register of output of sub-modules
 			sub_read_r     <= sub_read_w;
 			load_tmp_r     <= load_tmp_w;
