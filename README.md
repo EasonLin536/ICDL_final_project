@@ -3,7 +3,7 @@
 2020_spring IC Design Lab final project, NTUEE
 
 ## Introduction
-We implemented the edge part of **Dade Toonify**<sup>[1](#Reference)</sup> in verilog. The color is quite simple, apply median filter and gaussian filter on the image pixels R, G, B. Quantize the colors to desired number. We decide to implement this part with python. Combine the abovw two, we can create cartoon effect on any image.
+We implemented the edge part of **Dade Toonify**<sup>[1](#Reference)</sup> in verilog. The color is quite simple, apply median filter and gaussian filter on the image pixels R, G, B. Quantize the colors to desired number. We decide to implement this part with python. Combine the above two, we can create cartoon effect on any image.
 
 CHIP/CHIP.v is the top module, and all sub-modules have their own directories. In Testbench/pattern, contains all test patterns for each step, which are generated with Testbench/bitwise_full.py.
 
