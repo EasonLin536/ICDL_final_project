@@ -76,7 +76,7 @@ def comparator(a, b):
 
 def Median(img, debug=False, file=False):
     H, W = img.shape
-    Padding(img, noPad=True, printPad=True)
+    Padding(img,file=True, noPad=True, printPad=True)
     serial = SerialIn(img, kernal_size=3)
 
     img_med = []
