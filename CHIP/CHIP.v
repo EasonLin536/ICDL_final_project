@@ -7,8 +7,6 @@ module CHIP ( clk, reset, pixel_in0, pixel_in1, pixel_in2, pixel_in3, pixel_in4,
 	input                      clk, reset, load_end; // load_end is high with the last 5 input pixels
 	input  [`BIT_LENGTH - 1:0] pixel_in0, pixel_in1, pixel_in2, pixel_in3, pixel_in4; // input 5 pixels per cycle
 	output                     edge_out, readable;
-	// output [`BIT_LENGTH - 1:0] debug_pixel;
-	// output               [1:0] debug_angle;
 
 // ================ Reg & Wires ================ //
 	// LOAD_REG
@@ -29,20 +27,14 @@ module CHIP ( clk, reset, pixel_in0, pixel_in1, pixel_in2, pixel_in3, pixel_in4,
 	reg        col_end_r, col_end_w;
 
 	// sub-modules' input pixel registers
-	reg  [`BIT_LENGTH - 1:0] reg_3_in_r [0:2]; // reg for 3 pixel's input
-	reg  [`BIT_LENGTH - 1:0] reg_3_in_w [0:2]; // reg for 3 pixel's input
-	reg  [`BIT_LENGTH - 1:0] reg_5_in_r [0:4]; // reg for gaussian filter's input
-	reg  [`BIT_LENGTH - 1:0] reg_5_in_w [0:4]; // reg for gaussian filter's input
-	wire [`BIT_LENGTH - 1:0] in3_0, in3_1, in3_2; // wires connected to sub-modules' inputs
-	wire [`BIT_LENGTH - 1:0] in5_0, in5_1, in5_2, in5_3, in5_4; // wires connected to sub-modules' inputs
-	assign in3_0 = reg_3_in_r[0];
-	assign in3_1 = reg_3_in_r[1];
-	assign in3_2 = reg_3_in_r[2];
-	assign in5_0 = reg_5_in_r[0];
-	assign in5_1 = reg_5_in_r[1];
-	assign in5_2 = reg_5_in_r[2];
-	assign in5_3 = reg_5_in_r[3];
-	assign in5_4 = reg_5_in_r[4];
+	reg  [`BIT_LENGTH - 1:0] reg_in_r [0:4]; // reg for sub-modules input
+	reg  [`BIT_LENGTH - 1:0] reg_in_w [0:4]; // reg for sub-modules input
+	wire [`BIT_LENGTH - 1:0] in_0, in_1, in_2, in_3, in_4; // wires connected to sub-modules' inputs
+	assign in_0 = reg_in_r[0];
+	assign in_1 = reg_in_r[1];
+	assign in_2 = reg_in_r[2];
+	assign in_3 = reg_in_r[3];
+	assign in_4 = reg_in_r[4];
 	
 	// sub-modules' input angle registers
 	reg  [1:0] reg_ang_r, reg_ang_w;
@@ -81,8 +73,10 @@ module CHIP ( clk, reset, pixel_in0, pixel_in1, pixel_in2, pixel_in3, pixel_in4,
 	assign load_ang_w = sb_read ? sb_ang_out : 2'd0;
 
 	// debug
-	assign debug_pixel = nm_out; // modilfy for different module debugging
-	assign debug_angle = sb_ang_out;
+	// assign debug_pixel = nm_out; // modilfy for different module debugging
+	// assign debug_angle = sb_ang_out;
+	
+	// chip readable 
 	assign readable_w = hy_read;
 	assign readable = readable_r; // modilfy for different module debugging
 
@@ -95,9 +89,12 @@ module CHIP ( clk, reset, pixel_in0, pixel_in1, pixel_in2, pixel_in3, pixel_in4,
     integer i;
 
 // =============== Register File =============== //
-    reg [`BIT_LENGTH - 1:0] reg_img   [0:`TOTAL_REG - 1];
-    reg [`BIT_LENGTH - 1:0] reg_tmp   [0:`TOTAL_REG - 1];
-    reg               [1:0] reg_angle [0:`TOTAL_REG - 1];
+    reg [`BIT_LENGTH - 1:0] reg_img_r   [0:`TOTAL_REG - 1];
+    reg [`BIT_LENGTH - 1:0] reg_img_w   [0:`TOTAL_REG - 1];
+    reg [`BIT_LENGTH - 1:0] reg_tmp_r   [0:`TOTAL_REG - 1];
+    reg [`BIT_LENGTH - 1:0] reg_tmp_w   [0:`TOTAL_REG - 1];
+    reg               [1:0] reg_angle_r [0:`TOTAL_REG - 1];
+    reg               [1:0] reg_angle_w [0:`TOTAL_REG - 1];
 
 // ================== States =================== //
     reg [2:0] state, state_next;
@@ -117,23 +114,23 @@ module CHIP ( clk, reset, pixel_in0, pixel_in1, pixel_in2, pixel_in3, pixel_in4,
 
 // =========== Declare Sub-Modules ============= //
 	Median_Filter mf ( .clk(clk), .reset(sub_reset), .enable(mf_en),
-					   .pixel_in0(in3_0), .pixel_in1(in3_1), .pixel_in2(in3_2),
+					   .pixel_in0(in_0), .pixel_in1(in_1), .pixel_in2(in_2),
 					   .pixel_out(mf_out), .readable(mf_read) );
 	
 	Gaussian_Filter gf ( .clk(clk), .reset(sub_reset), .enable(gf_en),
-					     .pixel_in0(in5_0), .pixel_in1(in5_1), .pixel_in2(in5_2), .pixel_in3(in5_3), .pixel_in4(in5_4),
+					     .pixel_in0(in_0), .pixel_in1(in_1), .pixel_in2(in_2), .pixel_in3(in_3), .pixel_in4(in_4),
 					     .pixel_out(gf_out), .readable(gf_read) );
 	
 	Sobel sb ( .clk(clk), .reset(sub_reset), .enable(sb_en),
-			   .pixel_in0(in3_0), .pixel_in1(in3_1), .pixel_in2(in3_2),
+			   .pixel_in0(in_0), .pixel_in1(in_1), .pixel_in2(in_2),
 			   .pixel_out(sb_grad_out), .angle_out(sb_ang_out), .readable(sb_read) );
 	
 	NonMax nm ( .clk(clk), .reset(sub_reset), .enable(nm_en),
-			    .angle(ang_in), .pixel_in0(in3_0), .pixel_in1(in3_1), .pixel_in2(in3_2),
+			    .angle(ang_in), .pixel_in0(in_0), .pixel_in1(in_1), .pixel_in2(in_2),
 			    .pixel_out(nm_out), .readable(nm_read) );
 	
 	Hyster hy ( .clk(clk), .reset(sub_reset), .enable(hy_en),
-			    .pixel_in0(in3_0), .pixel_in1(in3_1), .pixel_in2(in3_2),
+			    .pixel_in0(in_0), .pixel_in1(in_1), .pixel_in2(in_2),
 			    .pixel_out(edge_out_w), .readable(hy_read) );
 
 // ============ Finite State Machine =========== //
@@ -259,34 +256,32 @@ module CHIP ( clk, reset, pixel_in0, pixel_in1, pixel_in2, pixel_in3, pixel_in4,
 
 	// load pixels into sub-modules
 	always @(*) begin
+		for (i=0;i<5;i=i+1) reg_in_w[i] = reg_in_r[i];
 		if (state == LOAD_MOD) begin
-			for (i=0;i<3;i=i+1) reg_3_in_w[i] = 5'd0;
-			for (i=0;i<5;i=i+1) reg_5_in_w[i] = 5'd0;
 			case (operation)
 				GAU_FIL: begin
-					reg_5_in_w[0] = reg_img[ind_0_r];
-					reg_5_in_w[1] = reg_img[ind_1_r];
-					reg_5_in_w[2] = reg_img[ind_2_r];
-					reg_5_in_w[3] = reg_img[ind_3_r];
-					reg_5_in_w[4] = reg_img[ind_4_r];
+					reg_in_w[0] = reg_img_r[ind_0_r];
+					reg_in_w[1] = reg_img_r[ind_1_r];
+					reg_in_w[2] = reg_img_r[ind_2_r];
+					reg_in_w[3] = reg_img_r[ind_3_r];
+					reg_in_w[4] = reg_img_r[ind_4_r];
 				end
 				default: begin
-					reg_3_in_w[0] = reg_img[ind_0_r];
-					reg_3_in_w[1] = reg_img[ind_1_r];
-					reg_3_in_w[2] = reg_img[ind_2_r];
+					reg_in_w[0] = reg_img_r[ind_0_r];
+					reg_in_w[1] = reg_img_r[ind_1_r];
+					reg_in_w[2] = reg_img_r[ind_2_r];
 				end
 			endcase
 		end
 		else begin
-			for (i=0;i<3;i=i+1) reg_3_in_w[i] = 5'd0;
-			for (i=0;i<5;i=i+1) reg_5_in_w[i] = 5'd0;
+			for (i=0;i<5;i=i+1) reg_in_w[i] = 5'd0;
 		end
 	end
 
 	// load angle into sub-modules
 	always @(*) begin
 		if (state == LOAD_MOD) begin
-			reg_ang_w = (operation == NON_MAX) ? reg_angle[ind_ang_r] : 2'd0;
+			reg_ang_w = (operation == NON_MAX) ? reg_angle_r[ind_ang_r] : 2'd0;
 		end
 		else reg_ang_w = 2'd0;
 	end
@@ -324,12 +319,12 @@ module CHIP ( clk, reset, pixel_in0, pixel_in1, pixel_in2, pixel_in3, pixel_in4,
 
 	// load output to reg_tmp only when state LOAD_MOD
 	always @(*) begin
-		reg_tmp[ind_load_tmp_r] = (state == LOAD_MOD) ? load_tmp_r : reg_tmp[ind_load_tmp_r];
+		reg_tmp_w[ind_load_tmp_r] = (state == LOAD_MOD) ? load_tmp_r : reg_tmp_r[ind_load_tmp_r];
 	end
 
 	// load angle to reg_ang
 	always @(*) begin
-		reg_angle[ind_load_tmp_r] = (state == LOAD_MOD && operation == SOBEL) ? load_ang_r : reg_angle[ind_load_tmp_r];
+		reg_angle_w[ind_load_tmp_r] = (state == LOAD_MOD && operation == SOBEL) ? load_ang_r : reg_angle_r[ind_load_tmp_r];
 	end
 
 	// determine col_end
@@ -348,59 +343,59 @@ module CHIP ( clk, reset, pixel_in0, pixel_in1, pixel_in2, pixel_in3, pixel_in4,
 	// e.g., output of mf is 18*18 write back to reg_img is 20*20
 	always @(*) begin
 		if (state == WRITE_BACK) begin
-			for (i=0;i<`TOTAL_REG;i=i+1) reg_img[i] = reg_tmp[i];
+			for (i=0;i<`TOTAL_REG;i=i+1) reg_img_w[i] = reg_tmp_r[i];
 			if (operation == GAU_FIL) begin
 				// 4 corners
-				reg_img[0]   = reg_img[42];
-				reg_img[1]   = reg_img[42];
-				reg_img[20]  = reg_img[42];
-				reg_img[21]  = reg_img[42];
-				reg_img[18]  = reg_img[57];
-				reg_img[19]  = reg_img[57];
-				reg_img[38]  = reg_img[57];
-				reg_img[39]  = reg_img[57];
-				reg_img[360] = reg_img[342];
-				reg_img[361] = reg_img[342];
-				reg_img[380] = reg_img[342];
-				reg_img[381] = reg_img[342];
-				reg_img[378] = reg_img[357];
-				reg_img[379] = reg_img[357];
-				reg_img[398] = reg_img[357];
-				reg_img[399] = reg_img[357];
+				reg_img_w[0]   = reg_tmp_r[42];
+				reg_img_w[1]   = reg_tmp_r[42];
+				reg_img_w[20]  = reg_tmp_r[42];
+				reg_img_w[21]  = reg_tmp_r[42];
+				reg_img_w[18]  = reg_tmp_r[57];
+				reg_img_w[19]  = reg_tmp_r[57];
+				reg_img_w[38]  = reg_tmp_r[57];
+				reg_img_w[39]  = reg_tmp_r[57];
+				reg_img_w[360] = reg_tmp_r[342];
+				reg_img_w[361] = reg_tmp_r[342];
+				reg_img_w[380] = reg_tmp_r[342];
+				reg_img_w[381] = reg_tmp_r[342];
+				reg_img_w[378] = reg_tmp_r[357];
+				reg_img_w[379] = reg_tmp_r[357];
+				reg_img_w[398] = reg_tmp_r[357];
+				reg_img_w[399] = reg_tmp_r[357];
 				// horizontal sides
 				for (i=0;i<16;i=i+1) begin
-					reg_img[i+2]   = reg_img[i+42];
-					reg_img[i+22]  = reg_img[i+42];
-					reg_img[i+362] = reg_img[i+342];
-					reg_img[i+382] = reg_img[i+342];
+					reg_img_w[i+2]   = reg_tmp_r[i+42];
+					reg_img_w[i+22]  = reg_tmp_r[i+42];
+					reg_img_w[i+362] = reg_tmp_r[i+342];
+					reg_img_w[i+382] = reg_tmp_r[i+342];
 				end
 				// vertical sides
 				for (i=40;i<360;i=i+20) begin
-					reg_img[i]    = reg_img[i+2];
-					reg_img[i+1]  = reg_img[i+2];
-					reg_img[i+18] = reg_img[i+17];
-					reg_img[i+19] = reg_img[i+17];
+					reg_img_w[i]    = reg_tmp_r[i+2];
+					reg_img_w[i+1]  = reg_tmp_r[i+2];
+					reg_img_w[i+18] = reg_tmp_r[i+17];
+					reg_img_w[i+19] = reg_tmp_r[i+17];
 				end
 			end
 			else begin
 				// 4 corners
-				reg_img[0]   = reg_img[21];
-				reg_img[19]  = reg_img[38];
-				reg_img[380] = reg_img[361];
-				reg_img[399] = reg_img[378];
+				reg_img_w[0]   = reg_tmp_r[21];
+				reg_img_w[19]  = reg_tmp_r[38];
+				reg_img_w[380] = reg_tmp_r[361];
+				reg_img_w[399] = reg_tmp_r[378];
 				// horizontal sides
 				for (i=0;i<18;i=i+1) begin
-					reg_img[i+1]   = reg_img[i+21];
-					reg_img[i+381] = reg_img[i+361];
+					reg_img_w[i+1]   = reg_tmp_r[i+21];
+					reg_img_w[i+381] = reg_tmp_r[i+361];
 				end
 				// vertical sides
 				for (i=20;i<380;i=i+20) begin
-					reg_img[i]    = reg_img[i+1];
-					reg_img[i+19] = reg_img[i+18];
+					reg_img_w[i]    = reg_tmp_r[i+1];
+					reg_img_w[i+19] = reg_tmp_r[i+18];
 				end
 			end
 		end
-		else for (i=0;i<`TOTAL_REG;i=i+1) reg_img[i] = reg_img[i];
+		else for (i=0;i<`TOTAL_REG;i=i+1) reg_img_w[i] = reg_img_r[i];
 	end
 
 // ================ Sequential ================= //
@@ -465,17 +460,31 @@ module CHIP ( clk, reset, pixel_in0, pixel_in1, pixel_in2, pixel_in3, pixel_in4,
 		end
 	end
 
-	// LOAD_MOD : load 3/5 input into sub-modules
+	// LOAD_MOD : load input into sub-modules
 	always @(posedge clk) begin
 		if (reset) begin
-			for (i=0;i<3;i=i+1) reg_3_in_r[i] <= 5'd0;
-			for (i=0;i<5;i=i+1) reg_5_in_r[i] <= 5'd0;
+			for (i=0;i<5;i=i+1) reg_in_r[i] <= 5'd0;
 			reg_ang_r <= 2'd0;
 		end
 		else begin
-			for (i=0;i<3;i=i+1) reg_3_in_r[i] <= reg_3_in_w[i];
-			for (i=0;i<5;i=i+1) reg_5_in_r[i] <= reg_5_in_w[i];
+			for (i=0;i<5;i=i+1) reg_in_r[i] <= reg_in_w[i];
 			reg_ang_r <= reg_ang_w;
+		end
+	end
+
+	// get output of sub-modules
+	always @(posedge clk) begin
+		if (reset) begin
+			for (i=0;i<`TOTAL_REG;i=i+1) begin
+				reg_tmp_r[i]   <= 5'd0;
+				reg_angle_r[i] <= 2'd0;
+			end
+		end
+		else begin
+			for (i=0;i<`TOTAL_REG;i=i+1) begin
+				reg_tmp_r[i]   <= reg_tmp_w[i];
+				reg_angle_r[i] <= reg_angle_w[i];
+			end
 		end
 	end
 
@@ -483,22 +492,20 @@ module CHIP ( clk, reset, pixel_in0, pixel_in1, pixel_in2, pixel_in3, pixel_in4,
 	always @(posedge clk) begin
 		if (reset) begin
 			for (i=0;i<`TOTAL_REG;i=i+1) begin
-				reg_img[i] <= 5'd0;
-				reg_angle[i] <= 2'd0;
+				reg_img_r[i] <= 5'd0;
 			end
 		end
 		else begin
-			for (i=0;i<`TOTAL_REG;i=i+1) reg_angle[i] <= reg_angle[i];
 			if (state == LOAD_REG) begin
-				for (i=0;i<`TOTAL_REG;i=i+1) reg_img[i] <= reg_img[i];
-				reg_img[load_index]   <= pixel_in0;
-				reg_img[load_index+1] <= pixel_in1;
-				reg_img[load_index+2] <= pixel_in2;
-				reg_img[load_index+3] <= pixel_in3;
-				reg_img[load_index+4] <= pixel_in4;
+				for (i=0;i<`TOTAL_REG;i=i+1) reg_img_r[i] <= reg_img_w[i];
+				reg_img_r[load_index]   <= pixel_in0;
+				reg_img_r[load_index+1] <= pixel_in1;
+				reg_img_r[load_index+2] <= pixel_in2;
+				reg_img_r[load_index+3] <= pixel_in3;
+				reg_img_r[load_index+4] <= pixel_in4;
 			end
 			else begin
-				for (i=0;i<`TOTAL_REG;i=i+1) reg_img[i] <= reg_img[i];
+				for (i=0;i<`TOTAL_REG;i=i+1) reg_img_r[i] <= reg_img_w[i];
 			end
 		end
 	end
