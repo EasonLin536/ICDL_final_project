@@ -7,11 +7,11 @@
 `define PIXEL3 "./pattern/pixel_in3.dat"
 `define PIXEL4 "./pattern/pixel_in4.dat"
 `define EXPECT "./pattern/out_golden.dat"
-`define BIT_LENGTH 5
+`define BIT_LENGTH 4
 
 module tb();
 
-	parameter INPUT_TILE  = 6; // modify for # of input tile
+	parameter INPUT_TILE  = 1350; // modify for # of input tile
 	parameter DATA_LENGTH = 80 * INPUT_TILE;
 	parameter OUT_LENGTH  = 18*18 * INPUT_TILE;
 
@@ -160,7 +160,7 @@ module tb();
           	$display("-------------------PASS-------------------\n");
        	end
        	else begin
-          	$display("There are %d errors!\n", err);
+          	$display("There are %d errors out of %d!\n", err, OUT_LENGTH);
 		end
         $display("---------------------------------------------\n");
 	    

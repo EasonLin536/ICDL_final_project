@@ -1,5 +1,5 @@
 `define IMG_DIM    20
-`define BIT_LENGTH 5
+`define BIT_LENGTH 4
 `define INDEX_LEN  9
 `define TOTAL_REG  `IMG_DIM * `IMG_DIM
 // for sobel module
@@ -1040,9 +1040,9 @@ module Sobel ( clk, reset, pixel_in0, pixel_in1, pixel_in2, enable, pixel_out, a
 	// TODO: modify for 4 bit input
     always @(*) begin
         case (state)
-            load:    reg_gradient = gradient[`BIT_LENGTH_GRD - 1] ? -1*absGradient[`BIT_LENGTH_GRD - 1:3]:gradient[`BIT_LENGTH_GRD - 1:3];
-            operate: reg_gradient = gradient[`BIT_LENGTH_GRD - 1] ? -1*absGradient[`BIT_LENGTH_GRD - 1:3]:gradient[`BIT_LENGTH_GRD - 1:3];
-            over:    reg_gradient = gradient[`BIT_LENGTH_GRD - 1] ? -1*absGradient[`BIT_LENGTH_GRD - 1:3]:gradient[`BIT_LENGTH_GRD - 1:3];
+            load:    reg_gradient = gradient[`BIT_LENGTH_GRD - 1] ? -1*absGradient[`BIT_LENGTH_GRD - 1:2]:gradient[`BIT_LENGTH_GRD - 1:2];
+            operate: reg_gradient = gradient[`BIT_LENGTH_GRD - 1] ? -1*absGradient[`BIT_LENGTH_GRD - 1:2]:gradient[`BIT_LENGTH_GRD - 1:2];
+            over:    reg_gradient = gradient[`BIT_LENGTH_GRD - 1] ? -1*absGradient[`BIT_LENGTH_GRD - 1:2]:gradient[`BIT_LENGTH_GRD - 1:2];
             default: reg_gradient = 5'd0;
         endcase
     end
