@@ -11,7 +11,7 @@ height = 20  #600
 
 ## Utility funciton
 def grayscale(rgb):
-    return (np.dot(rgb[..., :3], [0.299, 0.587, 0.114])/8).astype(int)
+    return (np.dot(rgb[..., :3], [0.299, 0.587, 0.114])/16).astype(int)
 
 def SerialIn(img, kernal_size=3):
     H, W = img.shape
@@ -139,7 +139,7 @@ def Median(img, debug=False, file=False):
 
     if file:
         with open("pattern/Median/out_golden.dat", 'w') as f:
-            f.write('\n'.join(map("{0:05b}".format, golden)))
+            f.write('\n'.join(map("{0:04b}".format, golden)))
         with open("pattern/Median/out_square", 'w') as f:
             square = []
             for i in range(18):
@@ -229,7 +229,7 @@ def Gaussian(img, debug=False, file=False):
 
     if file:
         with open("pattern/Gaussian/out_golden.dat", 'w') as f:
-            f.write('\n'.join(map("{0:05b}".format, golden)))
+            f.write('\n'.join(map("{0:04b}".format, golden)))
         with open("pattern/Gaussian/out_square", 'w') as f:
             square = []
             for i in range(16):
@@ -327,7 +327,7 @@ def Sobel(img, debug=False, file=False):
             Gy=sum3+sum4+sum5# 8 bits
             Gx_val=abs(Gx)
             Gy_val=abs(Gy)
-            Gradient=((Gx_val+Gy_val)>>3)
+            Gradient=((Gx_val+Gy_val)>>2)
             Gx_tan=tangent_22_5(Gx_val)
             Gy_tan=tangent_22_5(Gy_val)
             Gxt=compare_bool(Gx_tan,Gy_val)
@@ -348,7 +348,7 @@ def Sobel(img, debug=False, file=False):
 
     if file:
         with open("pattern/Sobel/golden_grad.dat", 'w') as f:
-            f.write('\n'.join(map("{0:05b}".format, golden_grad)))
+            f.write('\n'.join(map("{0:04b}".format, golden_grad)))
         with open("pattern/Sobel/golden_ang.dat", 'w') as f:
             f.write('\n'.join(map("{0:02b}".format, golden_ang)))
         with open("pattern/Sobel/out_square_grad", 'w') as f:
@@ -423,7 +423,7 @@ def nonMax(gradient, angle, debug=False, file=False):
 
     if file:
         with open("pattern/nonMax/out_golden.dat", 'w') as f:
-            f.write('\n'.join(map("{0:05b}".format, golden)))
+            f.write('\n'.join(map("{0:04b}".format, golden)))
         with open("pattern/nonMax/out_square", 'w') as f:
             square = []
             for i in range(18):
@@ -523,9 +523,9 @@ def main():
     img = Image.open(sys.argv[1])
     img = img.resize((width, height), Image.ANTIALIAS)
     img = grayscale(np.asarray(img))
-    Image.fromarray((img*4).astype(np.uint8)).show()
+    Image.fromarray((img*8).astype(np.uint8)).show()
     if save:
-        Image.fromarray((img*4).astype(np.uint8)).save("output/init.jpg")
+        Image.fromarray((img*8).astype(np.uint8)).save("output/init.jpg")
 
 
     height = height - 2
@@ -533,12 +533,12 @@ def main():
     print("=== Median ===")
     img_med = Median(img, file=True)
     if save:
-        Image.fromarray((img_med*4).astype(np.uint8)).save("output/med.jpg")
+        Image.fromarray((img_med*8).astype(np.uint8)).save("output/med.jpg")
 
     print("=== Gaussian ===")
     img_gau = Gaussian(img_med, file=True)
     if save:
-        Image.fromarray((img_gau*4).astype(np.uint8)).save("output/gau.jpg")
+        Image.fromarray((img_gau*8).astype(np.uint8)).save("output/gau.jpg")
 
     #Image.fromarray(img_med.astype(np.int32)).show()
     #img_gau = convolve(img_med, gaussian_kernel(5))
