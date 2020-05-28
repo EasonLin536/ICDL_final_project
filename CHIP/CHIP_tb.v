@@ -7,6 +7,7 @@
 `define PIXEL3 "./pattern/pixel_in3.dat"
 `define PIXEL4 "./pattern/pixel_in4.dat"
 `define EXPECT "./pattern/out_golden.dat"
+`define BIT_LENGTH 5
 
 module tb();
 
@@ -15,21 +16,21 @@ module tb();
 	parameter OUT_LENGTH  = 18*18 * INPUT_TILE;
 
 	reg        clk, reset, load_end;
-	reg  [4:0] pixel_in0;
-	reg  [4:0] pixel_in1;
-	reg  [4:0] pixel_in2;
-	reg  [4:0] pixel_in3;
-	reg  [4:0] pixel_in4;
+	reg  [`BIT_LENGTH - 1:0] pixel_in0;
+	reg  [`BIT_LENGTH - 1:0] pixel_in1;
+	reg  [`BIT_LENGTH - 1:0] pixel_in2;
+	reg  [`BIT_LENGTH - 1:0] pixel_in3;
+	reg  [`BIT_LENGTH - 1:0] pixel_in4;
 	wire       edge_out;
     
-	reg  [4:0] pixel_mem  [0:OUT_LENGTH-1];
-	reg  [4:0] angle_mem  [0:OUT_LENGTH-1];
-	reg  [4:0] pixel0_mem [0:DATA_LENGTH-1];
-	reg  [4:0] pixel1_mem [0:DATA_LENGTH-1];
-	reg  [4:0] pixel2_mem [0:DATA_LENGTH-1];
-	reg  [4:0] pixel3_mem [0:DATA_LENGTH-1];
-	reg  [4:0] pixel4_mem [0:DATA_LENGTH-1];
-	reg  [4:0] pixel_temp;
+	reg  [`BIT_LENGTH - 1:0] pixel_mem  [0:OUT_LENGTH-1];
+	reg  [`BIT_LENGTH - 1:0] angle_mem  [0:OUT_LENGTH-1];
+	reg  [`BIT_LENGTH - 1:0] pixel0_mem [0:DATA_LENGTH-1];
+	reg  [`BIT_LENGTH - 1:0] pixel1_mem [0:DATA_LENGTH-1];
+	reg  [`BIT_LENGTH - 1:0] pixel2_mem [0:DATA_LENGTH-1];
+	reg  [`BIT_LENGTH - 1:0] pixel3_mem [0:DATA_LENGTH-1];
+	reg  [`BIT_LENGTH - 1:0] pixel4_mem [0:DATA_LENGTH-1];
+	reg  [`BIT_LENGTH - 1:0] pixel_temp;
 
 	reg        in_pause;
 	reg        stop;
