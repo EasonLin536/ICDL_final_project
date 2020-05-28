@@ -6,8 +6,8 @@ from PIL import Image
 from scipy.ndimage.filters import convolve
 from scipy.signal import medfilt2d
 
-width = 20 #900
-height = 20  #600
+width = 900 #900
+height = 600  #600
 
 ## output data
 pixel_in = [[] for i in range(5)]

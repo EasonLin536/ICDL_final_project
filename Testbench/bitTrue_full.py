@@ -6,12 +6,12 @@ from PIL import Image
 from scipy.ndimage.filters import convolve
 from scipy.signal import medfilt2d
 
-width = 20 #900
-height = 20  #600
+width = 900 #900
+height = 600  #600
 
 ## Utility funciton
 def grayscale(rgb):
-    return (np.dot(rgb[..., :3], [0.299, 0.587, 0.114])/8).astype(int)
+    return (np.dot(rgb[..., :3], [0.299, 0.587, 0.114])/16).astype(int)
 
 def SerialIn(img, kernal_size=3):
     H, W = img.shape
@@ -76,7 +76,7 @@ def comparator(a, b):
 
 def Median(img, debug=False, file=False):
     H, W = img.shape
-    Padding(img,file=True, noPad=True, printPad=True)
+    # Padding(img,file=True, noPad=True, printPad=True)
     serial = SerialIn(img, kernal_size=3)
 
     img_med = []
@@ -524,40 +524,41 @@ def main():
     img = img.resize((width, height), Image.ANTIALIAS)
     img = grayscale(np.asarray(img))
     Image.fromarray((img*4).astype(np.uint8)).show()
-    if save:
-        Image.fromarray((img*4).astype(np.uint8)).save("output/init.jpg")
+    # if save:
+    Image.fromarray((img*4).astype(np.uint8)).save("./init.jpg")
 
 
     height = height - 2
     width = width - 2
     print("=== Median ===")
-    img_med = Median(img, file=True)
+    img_med = Median(img, file=False)
     if save:
         Image.fromarray((img_med*4).astype(np.uint8)).save("output/med.jpg")
 
     print("=== Gaussian ===")
-    img_gau = Gaussian(img_med, file=True)
+    img_gau = Gaussian(img_med, file=False)
     if save:
         Image.fromarray((img_gau*4).astype(np.uint8)).save("output/gau.jpg")
 
     #Image.fromarray(img_med.astype(np.int32)).show()
     #img_gau = convolve(img_med, gaussian_kernel(5))
     print("=== Sobel ===")
-    img_grad, img_angle = Sobel(img_gau, file=True)
+    img_grad, img_angle = Sobel(img_gau, file=False)
     # print(np.amax(img_grad))
     if save:
         Image.fromarray((img_grad*16).astype(np.uint8)).save("output/grad.jpg")
         Image.fromarray((img_angle*64).astype(np.uint8)).save("output/angle.jpg")
 
     print("=== nonMax ===")
-    img_sup = nonMax(img_grad, img_angle, file=True)
+    img_sup = nonMax(img_grad, img_angle, file=False)
     if save:
         Image.fromarray((img_sup*16).astype(np.uint8)).save("output/sup.jpg")
 
     print("=== Hysteresis ===")
-    img_final = Hysteresis(img_sup, file=True)
-    if save:
-        Image.fromarray((img_final*255).astype(np.uint8)).save("output/final.jpg")
+    img_final = Hysteresis(img_sup, file=False)
+    # if save:
+        # Image.fromarray((img_final*255).astype(np.uint8)).save("./final.jpg")
+    Image.fromarray((img_final*255).astype(np.uint8)).save("./final_4.jpg")
 
     show_edge(img_final)
 
