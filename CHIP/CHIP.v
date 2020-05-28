@@ -1,12 +1,12 @@
 `define IMG_DIM    20
-`define BIT_LENGTH 4
+`define BIT_LENGTH 5
 `define INDEX_LEN  9
 `define TOTAL_REG  `IMG_DIM * `IMG_DIM
 // for sobel module
 `define BIT_LENGTH_GRD 8
 `define BIT_LENGTH_ANG 2
 
-module CHIP ( clk, reset, pixel_in0, pixel_in1, pixel_in2, pixel_in3, pixel_in4, edge_out, load_end, readable);
+module CHIP ( clk, reset, pixel_in0, pixel_in1, pixel_in2, pixel_in3, pixel_in4, edge_out, load_end, readable );
 	
 	input                      clk, reset, load_end; // load_end is high with the last 5 input pixels
 	input  [`BIT_LENGTH - 1:0] pixel_in0, pixel_in1, pixel_in2, pixel_in3, pixel_in4; // input 5 pixels per cycle
@@ -27,8 +27,8 @@ module CHIP ( clk, reset, pixel_in0, pixel_in1, pixel_in2, pixel_in3, pixel_in4,
 	// indicators
 	reg  [`INDEX_LEN - 1:0] ind_col_end_r, ind_col_end_w; // assign with ind_1 - 1, if ind_0 == ind_col_end -> col_end = 1'b0
 	reg  [`INDEX_LEN - 1:0] ind_en_rise_r, ind_en_rise_w; // the index when enable signal rise
-	reg        row_end; // determine kernel movement
-	reg        col_end_r, col_end_w;
+	reg                     row_end; // determine kernel movement
+	reg                     col_end_r, col_end_w;
 
 	// sub-modules' input pixel registers
 	reg  [`BIT_LENGTH - 1:0] reg_in_r [0:4]; // reg for sub-modules input
@@ -56,7 +56,7 @@ module CHIP ( clk, reset, pixel_in0, pixel_in1, pixel_in2, pixel_in3, pixel_in4,
 	// use for extend col_end and LOAD_MOD state, 
 	// because when finish loading input (col is ended), 
 	// it takes a few cycles for the outputs to be written to reg_tmp
-	reg sub_read_r;
+	reg  sub_read_r;
 	wire sub_read_w;
 	assign sub_read_w = mf_read | gf_read | sb_read | nm_read | hy_read;
 
@@ -76,13 +76,9 @@ module CHIP ( clk, reset, pixel_in0, pixel_in1, pixel_in2, pixel_in3, pixel_in4,
 	wire               [1:0] load_ang_w;
 	assign load_ang_w = sb_read ? sb_ang_out : 2'd0;
 
-	// debug
-	// assign debug_pixel = nm_out; // modilfy for different module debugging
-	// assign debug_angle = sb_ang_out;
-	
 	// chip readable 
 	assign readable_w = hy_read;
-	assign readable = readable_r; // modilfy for different module debugging
+	assign readable   = readable_r; // modilfy for different module debugging
 
 	// chip output register
 	reg  edge_out_r;
@@ -532,33 +528,33 @@ module Median_Filter ( clk, reset, pixel_in0, pixel_in1, pixel_in2, enable, pixe
 
 // ================ Reg & Wires ================ //
 
-	reg    [`BIT_LENGTH - 1:0] reg_pixel_col0 [0:2]; // store the oldest pixels
-	reg    [`BIT_LENGTH - 1:0] reg_pixel_col1 [0:2];
-	reg    [`BIT_LENGTH - 1:0] reg_pixel_col2 [0:2];
+	reg  [`BIT_LENGTH - 1:0] reg_pixel_col0 [0:2]; // store the oldest pixels
+	reg  [`BIT_LENGTH - 1:0] reg_pixel_col1 [0:2];
+	reg  [`BIT_LENGTH - 1:0] reg_pixel_col2 [0:2];
 
-	reg    [1:0]               next_state;
-	reg    [1:0]               state;
+	reg  [1:0]               next_state;
+	reg  [1:0]               state;
 
-    reg    [`BIT_LENGTH - 1:0] x [0:8];
+    reg  [`BIT_LENGTH - 1:0] x [0:8];
 
     // output register
-    reg    [`BIT_LENGTH - 1:0] output_r; 
-    wire   [`BIT_LENGTH - 1:0] output_w;
-    reg    [`BIT_LENGTH - 1:0] reg_median;
-    wire   [`BIT_LENGTH - 1:0] median;
+    reg  [`BIT_LENGTH - 1:0] output_r; 
+    wire [`BIT_LENGTH - 1:0] output_w;
+    reg  [`BIT_LENGTH - 1:0] reg_median;
+    wire [`BIT_LENGTH - 1:0] median;
 
     // output readable signal
-    reg    readable_r;
-    wire   readable_w;
-    reg    reg_readable;
+    reg  readable_r;
+    wire readable_w;
+    reg  reg_readable;
 
-    // conparator
-    wire   [`BIT_LENGTH - 1:0] w0, w1, w2, w3, w4,
-                               w5, w6, w7, w8, w9,
-                               w10, w11, w12, w13, w14,
-                               w15, w16, w17, w18, w19,
-                               w20, w21, w22, w23, w24,
-                               w25, w26, w27, w28;
+    // comparator
+    wire [`BIT_LENGTH - 1:0] w0, w1, w2, w3, w4,
+                        	 w5, w6, w7, w8, w9,
+                        	 w10, w11, w12, w13, w14,
+                        	 w15, w16, w17, w18, w19,
+                        	 w20, w21, w22, w23, w24,
+                        	 w25, w26, w27, w28;
     
     // for loop
     integer i;
@@ -958,7 +954,7 @@ endmodule
 module Sobel ( clk, reset, pixel_in0, pixel_in1, pixel_in2, enable, pixel_out, angle_out, readable );
 
     input                          clk, reset;
-    input                          enable;    // generate by main ctrl unit: =0: no operation; =1: operation
+    input                          enable;    // =0: no operation; =1: operation
     output                         readable;  // when the entire image is processed
     input      [`BIT_LENGTH - 1:0] pixel_in0;
     input      [`BIT_LENGTH - 1:0] pixel_in1;
@@ -972,37 +968,29 @@ module Sobel ( clk, reset, pixel_in0, pixel_in1, pixel_in2, enable, pixel_out, a
     reg    [`BIT_LENGTH - 1:0] reg_pixel_col1 [0:2];
     reg    [`BIT_LENGTH - 1:0] reg_pixel_col2 [0:2];
 
-    reg    [1:0]               state, next_state;
+    reg    				 [1:0] state, next_state;
 
-    reg    [`BIT_LENGTH_GRD - 1:0] x0;
-    reg    [`BIT_LENGTH_GRD - 1:0] x1;
-    reg    [`BIT_LENGTH_GRD - 1:0] x2;
-    reg    [`BIT_LENGTH_GRD - 1:0] x3;
-    reg    [`BIT_LENGTH_GRD - 1:0] x4;
-    reg    [`BIT_LENGTH_GRD - 1:0] x5;
-    reg    [`BIT_LENGTH_GRD - 1:0] x6;
-    reg    [`BIT_LENGTH_GRD - 1:0] x7;
-    reg    [`BIT_LENGTH_GRD - 1:0] x8;
+    reg    [`BIT_LENGTH_GRD - 1:0] x0, x1, x2, x3, x4, x5, x6, x7, x8;
 
     // output register
-    reg    [`BIT_LENGTH - 1:0] output_r; 
+    reg    [`BIT_LENGTH - 1:0] output_r;
     wire   [`BIT_LENGTH - 1:0] output_w;
 
     reg    [`BIT_LENGTH_ANG - 1:0] ang_output_r; 
     wire   [`BIT_LENGTH_ANG - 1:0] ang_output_w;
 
-    reg    [`BIT_LENGTH - 1:0]     reg_gradient;
+    reg        [`BIT_LENGTH - 1:0] reg_gradient;
     wire   [`BIT_LENGTH_GRD - 1:0] gradient;
 
     reg    [`BIT_LENGTH_ANG - 1:0] reg_angle;
     wire   [`BIT_LENGTH_ANG - 1:0] angle;
     reg    [`BIT_LENGTH_ANG - 1:0] r_angle;
 
-    wire   [`BIT_LENGTH_GRD-1:0]   wire_Gx;
-    wire   [`BIT_LENGTH_GRD-1:0]   wire_Gy;
+    wire     [`BIT_LENGTH_GRD-1:0] wire_Gx;
+    wire     [`BIT_LENGTH_GRD-1:0] wire_Gy;
 
-    wire   [`BIT_LENGTH_GRD-1:0]   absGx;
-    wire   [`BIT_LENGTH_GRD-1:0]   absGy;
+    wire     [`BIT_LENGTH_GRD-1:0] absGx;
+    wire     [`BIT_LENGTH_GRD-1:0] absGy;
     // output readable signal
     reg    readable_r;
     wire   readable_w;
@@ -1013,8 +1001,7 @@ module Sobel ( clk, reset, pixel_in0, pixel_in1, pixel_in2, enable, pixel_out, a
     // conparator
     wire   [`BIT_LENGTH_GRD - 1:0] w0, w1, w2, w3, w4, w5;
 
-    wire   [`BIT_LENGTH_GRD - 1:0] Gxt;
-    wire   [`BIT_LENGTH_GRD - 1:0] Gyt;
+    wire   [`BIT_LENGTH_GRD - 1:0] Gxt, Gyt;
     
     wire         w20, w21;
     wire   [2:0] w23;
@@ -1042,7 +1029,7 @@ module Sobel ( clk, reset, pixel_in0, pixel_in1, pixel_in2, enable, pixel_out, a
     // next state logic
     always @(*) begin
         case (state)
-            load:    next_state = enable ? operate : load; //1 : 0
+            load:    next_state = enable ? operate : load; // 1 : 0
             operate: next_state = enable ? operate : over; // enable==0 over=1
             over:    next_state = over;
             default: next_state = over;
@@ -1050,11 +1037,12 @@ module Sobel ( clk, reset, pixel_in0, pixel_in1, pixel_in2, enable, pixel_out, a
     end
 
     // output logic
+	// TODO: modify for 4 bit input
     always @(*) begin
         case (state)
-            load:    reg_gradient = gradient[`BIT_LENGTH_GRD - 1] ? -1*absGradient[`BIT_LENGTH_GRD - 1:2] : gradient[`BIT_LENGTH_GRD - 1:2];
-            operate: reg_gradient = gradient[`BIT_LENGTH_GRD - 1] ? -1*absGradient[`BIT_LENGTH_GRD - 1:2] : gradient[`BIT_LENGTH_GRD - 1:2];
-            over:    reg_gradient = gradient[`BIT_LENGTH_GRD - 1] ? -1*absGradient[`BIT_LENGTH_GRD - 1:2] : gradient[`BIT_LENGTH_GRD - 1:2];
+            load:    reg_gradient = gradient[`BIT_LENGTH_GRD - 1] ? -1*absGradient[`BIT_LENGTH_GRD - 1:3]:gradient[`BIT_LENGTH_GRD - 1:3];
+            operate: reg_gradient = gradient[`BIT_LENGTH_GRD - 1] ? -1*absGradient[`BIT_LENGTH_GRD - 1:3]:gradient[`BIT_LENGTH_GRD - 1:3];
+            over:    reg_gradient = gradient[`BIT_LENGTH_GRD - 1] ? -1*absGradient[`BIT_LENGTH_GRD - 1:3]:gradient[`BIT_LENGTH_GRD - 1:3];
             default: reg_gradient = 5'd0;
         endcase
     end
@@ -1090,50 +1078,51 @@ module Sobel ( clk, reset, pixel_in0, pixel_in1, pixel_in2, enable, pixel_out, a
     end
 
     assign w0 = (~x0 + 8'd1) + ( (~x1 + 8'd1) << 1) + (~x2 + 8'd1);
-    assign w1 = 8'd0; //( 0 * x[3]) + ( 0 * x[4]) + ( 0 * x[5]);
+    assign w1 = 8'd0; // ( 0 * x[3]) + ( 0 * x[4]) + ( 0 * x[5]);
     assign w2 = ((x6) + (x7 << 1)) + (x8);
 
-    assign w3 = (x0) + (~x2 + 8'd1); //+ ( 0 * x[1])
-    assign w4 = (x3 << 1) + ((~x5 + 8'd1) << 1); //+ ( 0 * x[4]) 
-    assign w5 = (x6) + (~x8 + 8'd1); //+ ( 0 * x[7]) 
+    assign w3 = (x0) + (~x2 + 8'd1); // + ( 0 * x[1])
+    assign w4 = (x3 << 1) + ((~x5 + 8'd1) << 1); // + ( 0 * x[4]) 
+    assign w5 = (x6) + (~x8 + 8'd1); // + ( 0 * x[7]) 
 
     assign wire_Gx = (w0 + w1) + w2;
     assign wire_Gy = (w3 + w4) + w5;
 
-    assign absGradient = (gradient[`BIT_LENGTH_GRD-1]) ? (~gradient + 8'd1) : gradient;
+    assign absGradient = (gradient[`BIT_LENGTH_GRD - 1]) ? (~gradient + 8'd1) : gradient;
 
     assign sign_xor = wire_Gx[`BIT_LENGTH_GRD - 1] ^ wire_Gy[`BIT_LENGTH_GRD-1];
 
-    assign absGx = (wire_Gx[`BIT_LENGTH_GRD-1]) ? (~wire_Gx + 8'd1) : wire_Gx ;
-    assign absGy = (wire_Gy[`BIT_LENGTH_GRD-1]) ? (~wire_Gy + 8'd1) : wire_Gy ;
+    assign absGx = wire_Gx[`BIT_LENGTH_GRD - 1] ? (~wire_Gx + 8'd1) : wire_Gx ;
+    assign absGy = wire_Gy[`BIT_LENGTH_GRD - 1] ? (~wire_Gy + 8'd1) : wire_Gy ;
 
     assign gradient = (absGx + absGy);
 
-    assign Gxt = { 2'b00, absGx[`BIT_LENGTH_GRD - 1:2] } + { 3'b000,absGx[`BIT_LENGTH_GRD - 1:3] } + 
-				 { 5'b00000, absGx[`BIT_LENGTH_GRD - 1:5] } + { 7'b0000000, absGx[`BIT_LENGTH_GRD - 1] };
-    assign Gyt = { 2'b00, absGy[`BIT_LENGTH_GRD - 1:2] } + { 3'b000,absGy[`BIT_LENGTH_GRD - 1:3] } + 
-				 { 5'b00000, absGy[`BIT_LENGTH_GRD - 1:5] } + { 7'b0000000, absGy[`BIT_LENGTH_GRD - 1] };
+    assign Gxt = { 2'd0, absGx[`BIT_LENGTH_GRD - 1:2] } + { 3'd0, absGx[`BIT_LENGTH_GRD - 1:3] } + 
+				 { 5'd0, absGx[`BIT_LENGTH_GRD - 1:5] } + { 7'd0, absGx[`BIT_LENGTH_GRD - 1] };
+    assign Gyt = { 2'd0, absGy[`BIT_LENGTH_GRD - 1:2] } + { 3'd0, absGy[`BIT_LENGTH_GRD - 1:3] } + 
+				 { 5'd0, absGy[`BIT_LENGTH_GRD - 1:5] } + { 7'd0, absGy[`BIT_LENGTH_GRD - 1] };
 
     assign w20 = Gxt > absGy ? 1 : 0;
     assign w21 = Gyt > absGx ? 1 : 0;
     
-    assign w23 = { w20, w21, sign_xor };
+    assign w23 = { w20 , w21 , sign_xor };
 
     always @(w20 or w21 or sign_xor) begin
         case (w23)
-            3'b100   : r_angle = 2'b00; // 0 degree
-            3'b101   : r_angle = 2'b00;
-            3'b110   : r_angle = 2'b00;
-            3'b111   : r_angle = 2'b00;
-    
-            3'b000   : r_angle = 2'b01; //45
-    
-            3'b001   : r_angle = 2'b11; //135
-    
-            3'b011   : r_angle = 2'b10; //90
-            3'b010   : r_angle = 2'b10;
-        	default : r_angle  = 2'b00;
-     	endcase
+			// 0 degree
+            3'b100  : r_angle = 2'b00; 
+            3'b101  : r_angle = 2'b00;
+            3'b110  : r_angle = 2'b00;
+            3'b111  : r_angle = 2'b00;
+			// 45
+            3'b000  : r_angle = 2'b01;
+			// 135
+            3'b001  : r_angle = 2'b11;
+			// 90
+            3'b011  : r_angle = 2'b10;
+            3'b010  : r_angle = 2'b10;
+        	default : r_angle = 2'b00;
+		endcase
     end
 
 // ================ Sequential ================ //
@@ -1168,7 +1157,7 @@ module Sobel ( clk, reset, pixel_in0, pixel_in1, pixel_in2, enable, pixel_out, a
 endmodule
 
 /* NonMax */
-module NonMax ( clk, reset, angle, pixel_in0, pixel_in1, pixel_in2, enable, pixel_out, readable);
+module NonMax ( clk, reset, angle, pixel_in0, pixel_in1, pixel_in2, enable, pixel_out, readable );
 	
 	input						clk, reset;
 	input						enable;		// true when operating (sent by main control)
@@ -1296,7 +1285,7 @@ module NonMax ( clk, reset, angle, pixel_in0, pixel_in1, pixel_in2, enable, pixe
 endmodule
 
 /* Hyster */
-module Hyster ( clk, reset, pixel_in0, pixel_in1, pixel_in2, enable, pixel_out, readable);
+module Hyster ( clk, reset, pixel_in0, pixel_in1, pixel_in2, enable, pixel_out, readable );
 	
 	input						clk, reset;
 	input						enable;		// true when operating (sent by main control)
@@ -1401,8 +1390,8 @@ module Hyster ( clk, reset, pixel_in0, pixel_in1, pixel_in2, enable, pixel_out, 
 // ================ Sequential ================ //
 	always @(posedge clk or posedge reset) begin
 		if(reset) begin
-			state_r <= 0;
-			readable_r <= 0;
+			state_r     <= 0;
+			readable_r  <= 0;
 			pixel_out_r <= 0;
 			for (i=0; i<3; i=i+1) begin
 				pixel_col0_r[i] <= 5'd0;
@@ -1411,8 +1400,8 @@ module Hyster ( clk, reset, pixel_in0, pixel_in1, pixel_in2, enable, pixel_out, 
 			end
 		end
 		else begin
-			state_r <= state_n;
-			readable_r <= readable_n;
+			state_r     <= state_n;
+			readable_r  <= readable_n;
 			pixel_out_r <= pixel_out_n;
 			for (i=0; i<3; i=i+1) begin
 				pixel_col0_r[i] <= pixel_col0_n[i];
