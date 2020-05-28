@@ -11,7 +11,7 @@
 
 module tb();
 
-	parameter INPUT_TILE  = 2; // modify for # of input tile
+	parameter INPUT_TILE  = 6; // modify for # of input tile
 	parameter DATA_LENGTH = 80 * INPUT_TILE;
 	parameter OUT_LENGTH  = 18*18 * INPUT_TILE;
 

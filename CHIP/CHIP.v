@@ -6,7 +6,7 @@
 `define BIT_LENGTH_GRD 8
 `define BIT_LENGTH_ANG 2
 
-module CHIP ( clk, reset, pixel_in0, pixel_in1, pixel_in2, pixel_in3, pixel_in4, edge_out, load_end, readable );
+module CHIP ( clk, reset, pixel_in0, pixel_in1, pixel_in2, pixel_in3, pixel_in4, edge_out, load_end, readable);
 	
 	input                      clk, reset, load_end; // load_end is high with the last 5 input pixels
 	input  [`BIT_LENGTH - 1:0] pixel_in0, pixel_in1, pixel_in2, pixel_in3, pixel_in4; // input 5 pixels per cycle
@@ -27,8 +27,8 @@ module CHIP ( clk, reset, pixel_in0, pixel_in1, pixel_in2, pixel_in3, pixel_in4,
 	// indicators
 	reg  [`INDEX_LEN - 1:0] ind_col_end_r, ind_col_end_w; // assign with ind_1 - 1, if ind_0 == ind_col_end -> col_end = 1'b0
 	reg  [`INDEX_LEN - 1:0] ind_en_rise_r, ind_en_rise_w; // the index when enable signal rise
-	reg  row_end; // determine kernel movement
-	reg  col_end_r, col_end_w;
+	reg        row_end; // determine kernel movement
+	reg        col_end_r, col_end_w;
 
 	// sub-modules' input pixel registers
 	reg  [`BIT_LENGTH - 1:0] reg_in_r [0:4]; // reg for sub-modules input
@@ -49,21 +49,22 @@ module CHIP ( clk, reset, pixel_in0, pixel_in1, pixel_in2, pixel_in3, pixel_in4,
 	reg  enable_r, enable_w;
 	reg  readable_r;
 	wire readable_w;
-	wire gf_en, sb_en, nm_en, hy_en;
+	wire mf_en, gf_en, sb_en, nm_en, hy_en;
 	
 	// readable of sub-modules
-	wire gf_read, sb_read, nm_read, hy_read;
+	wire mf_read, gf_read, sb_read, nm_read, hy_read;
 	// use for extend col_end and LOAD_MOD state, 
 	// because when finish loading input (col is ended), 
 	// it takes a few cycles for the outputs to be written to reg_tmp
-	reg  sub_read_r;
+	reg sub_read_r;
 	wire sub_read_w;
-	assign sub_read_w = gf_read | sb_read | nm_read | hy_read;
+	assign sub_read_w = mf_read | gf_read | sb_read | nm_read | hy_read;
 
 	// sub-modules are reset when state PREPARE
 	wire sub_reset;
 
 	// output of sub-modules
+	wire [`BIT_LENGTH - 1:0] mf_out;
 	wire [`BIT_LENGTH - 1:0] gf_out;
 	wire [`BIT_LENGTH - 1:0] sb_grad_out;
 	wire               [1:0] sb_ang_out;
@@ -74,6 +75,10 @@ module CHIP ( clk, reset, pixel_in0, pixel_in1, pixel_in2, pixel_in3, pixel_in4,
 	reg                [1:0] load_ang_r; // angle
 	wire               [1:0] load_ang_w;
 	assign load_ang_w = sb_read ? sb_ang_out : 2'd0;
+
+	// debug
+	// assign debug_pixel = nm_out; // modilfy for different module debugging
+	// assign debug_angle = sb_ang_out;
 	
 	// chip readable 
 	assign readable_w = hy_read;
@@ -104,13 +109,18 @@ module CHIP ( clk, reset, pixel_in0, pixel_in1, pixel_in2, pixel_in3, pixel_in4,
     parameter WRITE_BACK = 3'd4; // write the pixels in reg_tmp to reg_img and add padding
 
     reg [2:0] operation, operation_next; // current operation e.g., Median_Filter
-    parameter IDLE       = 3'd0;
-    parameter GAU_FIL    = 3'd1; // 5*5 gaussian filter
-    parameter SOBEL      = 3'd2; // sobel gradient calculation
-    parameter NON_MAX    = 3'd3; // non-maximum supression
-    parameter HYSTER     = 3'd4; // hysteresis
+    parameter IDLE     = 3'd0;
+	parameter MED_FIL  = 3'd1; // 3*3 median filter
+    parameter GAU_FIL  = 3'd2; // 5*5 gaussian filter
+    parameter SOBEL    = 3'd3; // sobel gradient calculation
+    parameter NON_MAX  = 3'd4; // non-maximum supression
+    parameter HYSTER   = 3'd5; // hysteresis
 
 // =========== Declare Sub-Modules ============= //
+	Median_Filter mf ( .clk(clk), .reset(sub_reset), .enable(mf_en),
+					   .pixel_in0(in_0), .pixel_in1(in_1), .pixel_in2(in_2),
+					   .pixel_out(mf_out), .readable(mf_read) );
+	
 	Gaussian_Filter gf ( .clk(clk), .reset(sub_reset), .enable(gf_en),
 					     .pixel_in0(in_0), .pixel_in1(in_1), .pixel_in2(in_2), .pixel_in3(in_3), .pixel_in4(in_4),
 					     .pixel_out(gf_out), .readable(gf_read) );
@@ -127,7 +137,7 @@ module CHIP ( clk, reset, pixel_in0, pixel_in1, pixel_in2, pixel_in3, pixel_in4,
 			    .pixel_in0(in_0), .pixel_in1(in_1), .pixel_in2(in_2),
 			    .pixel_out(edge_out_w), .readable(hy_read) );
 
-// ========== Finite State Machine ============= //
+// ============ Finite State Machine =========== //
 	/* FSM */
 	always @(*) begin
 		case (state)
@@ -156,7 +166,8 @@ module CHIP ( clk, reset, pixel_in0, pixel_in1, pixel_in2, pixel_in3, pixel_in4,
 	always @(*) begin
 		if (state == SET_OP) begin
 			case (operation)
-				IDLE:    operation_next = GAU_FIL;
+				IDLE:    operation_next = MED_FIL;
+				MED_FIL: operation_next = GAU_FIL;
 				GAU_FIL: operation_next = SOBEL;
 				SOBEL:   operation_next = NON_MAX;
 				NON_MAX: operation_next = HYSTER;
@@ -280,6 +291,7 @@ module CHIP ( clk, reset, pixel_in0, pixel_in1, pixel_in2, pixel_in3, pixel_in4,
 	end
 
 	// load enable signals
+	assign mf_en = (operation == MED_FIL) ? enable_r : 1'b0;
 	assign gf_en = (operation == GAU_FIL) ? enable_r : 1'b0;
 	assign sb_en = (operation == SOBEL)   ? enable_r : 1'b0;
 	assign nm_en = (operation == NON_MAX) ? enable_r : 1'b0;
@@ -297,6 +309,7 @@ module CHIP ( clk, reset, pixel_in0, pixel_in1, pixel_in2, pixel_in3, pixel_in4,
 	always @(*) begin
 		if (state == LOAD_MOD) begin
 			case (operation)
+				MED_FIL: load_tmp_w = mf_out;
 				GAU_FIL: load_tmp_w = gf_out;
 				SOBEL:   load_tmp_w = sb_grad_out;
 				NON_MAX: load_tmp_w = nm_out;
@@ -506,6 +519,181 @@ module CHIP ( clk, reset, pixel_in0, pixel_in1, pixel_in2, pixel_in3, pixel_in4,
 endmodule
 
 // ================ Sub-Modules ================ //
+/* Median Filter */
+module Median_Filter ( clk, reset, pixel_in0, pixel_in1, pixel_in2, enable, pixel_out, readable );
+
+	input                      clk, reset;
+	input                      enable;    // generate by main ctrl unit: =0: no operation; =1: operation
+	output                     readable;  // when the entire image is processed
+	input  [`BIT_LENGTH - 1:0] pixel_in0;
+	input  [`BIT_LENGTH - 1:0] pixel_in1;
+	input  [`BIT_LENGTH - 1:0] pixel_in2;
+	output [`BIT_LENGTH - 1:0] pixel_out;
+
+// ================ Reg & Wires ================ //
+
+	reg    [`BIT_LENGTH - 1:0] reg_pixel_col0 [0:2]; // store the oldest pixels
+	reg    [`BIT_LENGTH - 1:0] reg_pixel_col1 [0:2];
+	reg    [`BIT_LENGTH - 1:0] reg_pixel_col2 [0:2];
+
+	reg    [1:0]               next_state;
+	reg    [1:0]               state;
+
+    reg    [`BIT_LENGTH - 1:0] x [0:8];
+
+    // output register
+    reg    [`BIT_LENGTH - 1:0] output_r; 
+    wire   [`BIT_LENGTH - 1:0] output_w;
+    reg    [`BIT_LENGTH - 1:0] reg_median;
+    wire   [`BIT_LENGTH - 1:0] median;
+
+    // output readable signal
+    reg    readable_r;
+    wire   readable_w;
+    reg    reg_readable;
+
+    // conparator
+    wire   [`BIT_LENGTH - 1:0] w0, w1, w2, w3, w4,
+                               w5, w6, w7, w8, w9,
+                               w10, w11, w12, w13, w14,
+                               w15, w16, w17, w18, w19,
+                               w20, w21, w22, w23, w24,
+                               w25, w26, w27, w28;
+    
+    // for loop
+    integer i;
+
+    assign pixel_out  = output_r;
+    assign output_w   = reg_median;
+    assign readable   = readable_r;
+    assign readable_w = reg_readable;
+
+// =============== Combinational =============== //
+	
+	// FSM
+	parameter load    = 2'd0;
+	parameter operate = 2'd1;
+	parameter over    = 2'd2;
+
+    // next state logic
+	always @(*) begin
+		case (state)
+			load:    next_state = enable ? operate : load;
+			operate: next_state = enable ? operate : over;
+			over:    next_state = over;
+			default: next_state = over;
+		endcase
+	end
+
+    // output logic
+    always @(*) begin
+        case (state)
+            load:    reg_median = median;
+            operate: reg_median = median;
+            over:    reg_median = median;
+            default: reg_median = 5'd0;
+        endcase
+    end
+
+    always @(*) begin
+        case (state)
+        	load:    reg_readable = 1'b0;
+        	operate: reg_readable = 1'b1;
+            over:    reg_readable = 1'b0;
+            default: reg_readable = 1'b0;
+        endcase
+    end
+
+    always @(*) begin
+        for (i=0;i<3;i=i+1) begin
+            x[i] = reg_pixel_col0[i];
+        end
+        for (i=3;i<6;i=i+1) begin
+            x[i] = reg_pixel_col1[i-3];
+        end
+        for (i=6;i<9;i=i+1) begin
+            x[i] = reg_pixel_col2[i-6];
+        end
+    end
+
+    // stage 1
+    assign w0 = x[0] > x[1] ? x[0] : x[1];
+    assign w1 = x[0] > x[1] ? x[1] : x[0];
+    assign w2 = x[3] > x[4] ? x[3] : x[4];
+    assign w3 = x[3] > x[4] ? x[4] : x[3];
+    assign w4 = x[6] > x[7] ? x[6] : x[7];
+    assign w5 = x[6] > x[7] ? x[7] : x[6];
+
+    // stage 2
+    assign w6  = w1 > x[2] ? w1   : x[2];
+    assign w7  = w1 > x[2] ? x[2] : w1;
+    assign w8  = w3 > x[5] ? w3   : x[5];
+    assign w9  = w3 > x[5] ? x[5] : w3;
+    assign w10 = w5 > x[8] ? w5   : x[8];
+    assign w11 = w5 > x[8] ? x[8] : w5;
+
+    //stage 3
+    assign w12 = w0 > w6  ? w0  : w6;
+    assign w13 = w0 > w6  ? w6  : w0;
+    assign w14 = w2 > w8  ? w2  : w8;
+    assign w15 = w2 > w8  ? w8  : w2;
+    assign w16 = w4 > w10 ? w4  : w10;
+    assign w17 = w4 > w10 ? w10 : w4;
+    
+    //stage 4
+    assign w18 = w12 > w14 ? w14 : w12;
+    assign w19 = w13 > w15 ? w13 : w15;
+    assign w20 = w13 > w15 ? w15 : w13;
+    assign w21 = w9  > w11 ? w9  : w11;
+
+    // stage 5
+    assign w22 = w18 > w16 ? w16 : w18;
+    assign w23 = w20 > w17 ? w20 : w17;
+    assign w24 = w7  > w21 ? w7  : w21;
+
+    // stage 6
+    assign w25 = w19 > w23 ? w23 : w19;
+
+    // stage 7
+    assign w26 = w22 > w25 ? w22 : w25;
+    assign w27 = w22 > w25 ? w25 : w22;
+
+    // stage 8
+    assign w28 = w27 > w24 ? w27 : w24;
+
+    // stage 9
+    assign median = w26 > w28 ? w28 : w26;
+
+// ================ Sequential ================ //
+
+	always @(posedge clk or posedge reset) begin
+		if (reset) begin
+			for (i=0;i<3;i=i+1) begin
+				reg_pixel_col0[i] <= 5'd0;
+				reg_pixel_col1[i] <= 5'd0;
+				reg_pixel_col2[i] <= 5'd0;
+            end
+            state      <= load;
+            output_r   <= 5'd0;
+            readable_r <= 1'b0;
+		end
+		else begin
+			for (i=0;i<3;i=i+1) begin
+				reg_pixel_col0[i] <= reg_pixel_col1[i];
+				reg_pixel_col1[i] <= reg_pixel_col2[i];
+			end
+			reg_pixel_col2[0] <= pixel_in0;
+			reg_pixel_col2[1] <= pixel_in1;
+			reg_pixel_col2[2] <= pixel_in2;
+
+            state      <= next_state;
+            output_r   <= output_w;
+            readable_r <= readable_w;
+		end
+	end
+
+endmodule
+
 /* Gaussian Filter */
 module Gaussian_Filter ( clk, reset, pixel_in0, pixel_in1, pixel_in2, pixel_in3, pixel_in4, enable, pixel_out, readable );
 
@@ -527,8 +715,8 @@ module Gaussian_Filter ( clk, reset, pixel_in0, pixel_in1, pixel_in2, pixel_in3,
 	reg    [`BIT_LENGTH - 1:0] reg_pixel_col3 [0:4];
 	reg    [`BIT_LENGTH - 1:0] reg_pixel_col4 [0:4];
 
-	reg                  [1:0] next_state;
-	reg                  [1:0] state;
+	reg    [1:0]               next_state;
+	reg    [1:0]               state;
 
 	// output register
     reg    [`BIT_LENGTH - 1:0] output_r; 
@@ -610,7 +798,7 @@ module Gaussian_Filter ( clk, reset, pixel_in0, pixel_in1, pixel_in2, pixel_in3,
 
     sum_n_divide snd  ( sum[0], sum[1], sum[2], sum[3], sum[4], gau );
 
-// ================ Sequential ================= //
+// ================ Sequential ================ //
 	
 	always @(posedge clk or posedge reset) begin
 		if (reset) begin
@@ -692,7 +880,7 @@ module filter_col_1 ( pixel_0, pixel_1, pixel_2, pixel_3, pixel_4, sum );
 	wire   [`BIT_LENGTH + 3:0] extend_4;
 	wire   [`BIT_LENGTH + 3:0] extend_5;
 
-	wire   [`BIT_LENGTH + 5:0] w0, w1, w2, w3, w4, w5;
+	wire   [11:0] w0, w1, w2, w3, w4, w5;
 
 	assign extend_1 = { 4'b0, pixel_0 };
 	assign extend_2 = { 4'b0, pixel_1 };
@@ -725,7 +913,7 @@ module filter_col_2 ( pixel_0, pixel_1, pixel_2, pixel_3, pixel_4, sum );
 	wire   [`BIT_LENGTH + 3:0] extend_4;
 	wire   [`BIT_LENGTH + 3:0] extend_5;
 
-	wire   [`BIT_LENGTH + 5:0] w0, w1, w2, w3, w4, w5, w6, w7;
+	wire   [11:0] w0, w1, w2, w3, w4, w5, w6, w7;
 
 	assign extend_1 = { 4'b0, pixel_0 };
 	assign extend_2 = { 4'b0, pixel_1 };
@@ -948,7 +1136,7 @@ module Sobel ( clk, reset, pixel_in0, pixel_in1, pixel_in2, enable, pixel_out, a
      endcase
     end
 
-// ================ Sequential ================= //
+// ================ Sequential ================ //
 
     always @(posedge clk or posedge reset) begin
         if (reset) begin
@@ -982,16 +1170,17 @@ endmodule
 /* NonMax */
 module NonMax ( clk, reset, angle, pixel_in0, pixel_in1, pixel_in2, enable, pixel_out, readable);
 	
-	input					   clk, reset;
-	input					   enable;		// true when operating (sent by main control)
-	input                [1:0] angle;
-	input  [`BIT_LENGTH - 1:0] pixel_in0, pixel_in1, pixel_in2;
-	output					   readable;	// rise when start generating output
-	output [`BIT_LENGTH - 1:0] pixel_out;
+	input						clk, reset;
+	input						enable;		// true when operating (sent by main control)
+	output						readable;	// rise when start generating output
+
+	input  [1:0]				angle;
+	input  [`BIT_LENGTH - 1:0]	pixel_in0, pixel_in1, pixel_in2;
+	output [`BIT_LENGTH - 1:0]	pixel_out;
 
 // ================ Reg & Wires ================ //
-	reg                  [1:0] state_n, state_r;
-	reg                  [1:0] ang_n, ang_r;
+	reg    [1:0]				state_n, state_r;
+	reg    [1:0]				ang_n, ang_r;
 	reg    [`BIT_LENGTH - 1:0]	pixel_col0_n[0:2], pixel_col1_n[0:2], pixel_col2_n[0:2];
 	reg    [`BIT_LENGTH - 1:0]	pixel_col0_r[0:2], pixel_col1_r[0:2], pixel_col2_r[0:2];
 	reg    [`BIT_LENGTH - 1:0]	pixel_out_n, pixel_out_r;
@@ -1004,9 +1193,9 @@ module NonMax ( clk, reset, angle, pixel_in0, pixel_in1, pixel_in2, enable, pixe
 
 // =============== Combinational =============== //
 	// FSM
-	parameter load	  = 2'b00;
-	parameter operate = 2'b01;
-	parameter over	  = 2'b11;
+	parameter load		= 2'b00;
+	parameter operate	= 2'b01;
+	parameter over		= 2'b11;
 
 	always @(*) begin
 		case (state_r)
@@ -1078,7 +1267,7 @@ module NonMax ( clk, reset, angle, pixel_in0, pixel_in1, pixel_in2, enable, pixe
 		endcase
 	end
 	
-// ================ Sequential ================= //
+// ================ Sequential ================ //
 	always @(posedge clk or posedge reset) begin
 		if(reset) begin
 			state_r <= 0;
@@ -1209,7 +1398,7 @@ module Hyster ( clk, reset, pixel_in0, pixel_in1, pixel_in2, enable, pixel_out, 
 		endcase
 	end
 	
-// ================ Sequential ================= //
+// ================ Sequential ================ //
 	always @(posedge clk or posedge reset) begin
 		if(reset) begin
 			state_r <= 0;
