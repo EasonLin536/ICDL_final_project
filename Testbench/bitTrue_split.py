@@ -6,8 +6,8 @@ from PIL import Image
 from scipy.ndimage.filters import convolve
 from scipy.signal import medfilt2d
 
-width = 60 #900
-height = 40  #600
+width = 20 #900
+height = 20  #600
 
 ## output data
 pixel_in = [[] for i in range(5)]
@@ -15,14 +15,14 @@ pixel_out = []
 
 ## Utility funciton
 def grayscale(rgb):
-    return (np.dot(rgb[..., :3], [0.299, 0.587, 0.114])/8).astype(int)
+    return (np.dot(rgb[..., :3], [0.299, 0.587, 0.114])/16).astype(int)
 
 def SerialIn(img, kernal_size=3):
     H, W = img.shape
 
     # to serial input
     resulting_img = []
-    D = range(32)
+    D = range(16)
     for i in range(H-kernal_size+1):
         row = []
         for j in range(W):
@@ -55,11 +55,11 @@ def Padding(orig_img, padnum=1, printPad=False, noPad=False, file=False):
 
         for row in img:
             for i in range(4):
-                pixel_in[0].append("{0:05b}".format(row[5*i]))
-                pixel_in[1].append("{0:05b}".format(row[5*i+1]))
-                pixel_in[2].append("{0:05b}".format(row[5*i+2]))
-                pixel_in[3].append("{0:05b}".format(row[5*i+3]))
-                pixel_in[4].append("{0:05b}".format(row[5*i+4]))
+                pixel_in[0].append("{0:04b}".format(row[5*i]))
+                pixel_in[1].append("{0:04b}".format(row[5*i+1]))
+                pixel_in[2].append("{0:04b}".format(row[5*i+2]))
+                pixel_in[3].append("{0:04b}".format(row[5*i+3]))
+                pixel_in[4].append("{0:04b}".format(row[5*i+4]))
 
         # for i in range(5):
         #     with open("pattern/input_pixel/pixel_in" + str(i) + ".dat", 'w') as f:
@@ -152,7 +152,7 @@ def Median(img, debug=False, file=False):
 
     if file:
         with open("pattern/Median/out_golden.dat", 'w') as f:
-            f.write('\n'.join(map("{0:05b}".format, golden)))
+            f.write('\n'.join(map("{0:04b}".format, golden)))
         with open("pattern/Median/out_square", 'w') as f:
             square = []
             for i in range(18):
@@ -242,7 +242,7 @@ def Gaussian(img, debug=False, file=False):
 
     if file:
         with open("pattern/Gaussian/out_golden.dat", 'w') as f:
-            f.write('\n'.join(map("{0:05b}".format, golden)))
+            f.write('\n'.join(map("{0:04b}".format, golden)))
         with open("pattern/Gaussian/out_square", 'w') as f:
             square = []
             for i in range(16):
@@ -340,7 +340,7 @@ def Sobel(img, debug=False, file=False):
             Gy=sum3+sum4+sum5# 8 bits
             Gx_val=abs(Gx)
             Gy_val=abs(Gy)
-            Gradient=((Gx_val+Gy_val)>>3)
+            Gradient=((Gx_val+Gy_val)>>2)
             Gx_tan=tangent_22_5(Gx_val)
             Gy_tan=tangent_22_5(Gy_val)
             Gxt=compare_bool(Gx_tan,Gy_val)
@@ -361,7 +361,7 @@ def Sobel(img, debug=False, file=False):
 
     if file:
         with open("pattern/Sobel/golden_grad.dat", 'w') as f:
-            f.write('\n'.join(map("{0:05b}".format, golden_grad)))
+            f.write('\n'.join(map("{0:04b}".format, golden_grad)))
         with open("pattern/Sobel/golden_ang.dat", 'w') as f:
             f.write('\n'.join(map("{0:02b}".format, golden_ang)))
         with open("pattern/Sobel/out_square_grad", 'w') as f:
@@ -436,7 +436,7 @@ def nonMax(gradient, angle, debug=False, file=False):
 
     if file:
         with open("pattern/nonMax/out_golden.dat", 'w') as f:
-            f.write('\n'.join(map("{0:05b}".format, golden)))
+            f.write('\n'.join(map("{0:04b}".format, golden)))
         with open("pattern/nonMax/out_square", 'w') as f:
             square = []
             for i in range(18):
@@ -539,9 +539,9 @@ def main():
     orig_img = Image.open(sys.argv[1])
     orig_img = orig_img.resize((width, height), Image.ANTIALIAS)
     orig_img = grayscale(np.asarray(orig_img))
-    Image.fromarray((orig_img*4).astype(np.uint8)).show()
+    Image.fromarray((orig_img*8).astype(np.uint8)).show()
     if save:
-        Image.fromarray((orig_img*4).astype(np.uint8)).save("output/init.jpg")
+        Image.fromarray((orig_img*8).astype(np.uint8)).save("output/init.jpg")
 
     img_list = split_img(orig_img, split_size)
     bin_h = int(width/split_size)
@@ -555,13 +555,15 @@ def main():
         print("===== bin{} =====".format(i))
         #print("=== Median ===")
         img_med = Median(img)
+        # img_med = img
         if save:
-            Image.fromarray((img_med*4).astype(np.uint8)).save("output/med.jpg")
+            Image.fromarray((img_med*8).astype(np.uint8)).save("output/med.jpg")
 
         #print("=== Gaussian ===")
         img_gau = Gaussian(img_med)
+        # img_gau = img_med
         if save:
-            Image.fromarray((img_gau*4).astype(np.uint8)).save("output/gau.jpg")
+            Image.fromarray((img_gau*8).astype(np.uint8)).save("output/gau.jpg")
 
         #print("=== Sobel ===")
         img_grad, img_angle = Sobel(img_gau)
