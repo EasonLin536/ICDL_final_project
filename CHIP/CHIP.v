@@ -1,5 +1,5 @@
 `define IMG_DIM    20
-`define BIT_LENGTH 5
+`define BIT_LENGTH 4
 `define INDEX_LEN  9
 `define TOTAL_REG  `IMG_DIM * `IMG_DIM
 // for sobel module
@@ -972,18 +972,17 @@ module Sobel ( clk, reset, pixel_in0, pixel_in1, pixel_in2, enable, pixel_out, a
     reg    [`BIT_LENGTH - 1:0] reg_pixel_col1 [0:2];
     reg    [`BIT_LENGTH - 1:0] reg_pixel_col2 [0:2];
 
-    reg    [1:0]               next_state;
-    reg    [1:0]               state;
+    reg    [1:0]               state, next_state;
 
-    reg    [`BIT_LENGTH_GRD-1 :0] x0;
-    reg    [`BIT_LENGTH_GRD-1 :0] x1;
-    reg    [`BIT_LENGTH_GRD-1 :0] x2;
-    reg    [`BIT_LENGTH_GRD-1 :0] x3;
-    reg    [`BIT_LENGTH_GRD-1 :0] x4;
-    reg    [`BIT_LENGTH_GRD-1 :0] x5;
-    reg    [`BIT_LENGTH_GRD-1 :0] x6;
-    reg    [`BIT_LENGTH_GRD-1 :0] x7;
-    reg    [`BIT_LENGTH_GRD-1 :0] x8;
+    reg    [`BIT_LENGTH_GRD - 1:0] x0;
+    reg    [`BIT_LENGTH_GRD - 1:0] x1;
+    reg    [`BIT_LENGTH_GRD - 1:0] x2;
+    reg    [`BIT_LENGTH_GRD - 1:0] x3;
+    reg    [`BIT_LENGTH_GRD - 1:0] x4;
+    reg    [`BIT_LENGTH_GRD - 1:0] x5;
+    reg    [`BIT_LENGTH_GRD - 1:0] x6;
+    reg    [`BIT_LENGTH_GRD - 1:0] x7;
+    reg    [`BIT_LENGTH_GRD - 1:0] x8;
 
     // output register
     reg    [`BIT_LENGTH - 1:0] output_r; 
@@ -1053,9 +1052,9 @@ module Sobel ( clk, reset, pixel_in0, pixel_in1, pixel_in2, enable, pixel_out, a
     // output logic
     always @(*) begin
         case (state)
-            load:    reg_gradient = gradient[`BIT_LENGTH_GRD-1] ? -1*absGradient[`BIT_LENGTH_GRD-1:3]:gradient[`BIT_LENGTH_GRD-1:3];
-            operate: reg_gradient = gradient[`BIT_LENGTH_GRD-1] ? -1*absGradient[`BIT_LENGTH_GRD-1:3]:gradient[`BIT_LENGTH_GRD-1:3];
-            over:    reg_gradient = gradient[`BIT_LENGTH_GRD-1] ? -1*absGradient[`BIT_LENGTH_GRD-1:3]:gradient[`BIT_LENGTH_GRD-1:3];
+            load:    reg_gradient = gradient[`BIT_LENGTH_GRD - 1] ? -1*absGradient[`BIT_LENGTH_GRD - 1:2] : gradient[`BIT_LENGTH_GRD - 1:2];
+            operate: reg_gradient = gradient[`BIT_LENGTH_GRD - 1] ? -1*absGradient[`BIT_LENGTH_GRD - 1:2] : gradient[`BIT_LENGTH_GRD - 1:2];
+            over:    reg_gradient = gradient[`BIT_LENGTH_GRD - 1] ? -1*absGradient[`BIT_LENGTH_GRD - 1:2] : gradient[`BIT_LENGTH_GRD - 1:2];
             default: reg_gradient = 5'd0;
         endcase
     end
@@ -1110,15 +1109,17 @@ module Sobel ( clk, reset, pixel_in0, pixel_in1, pixel_in2, enable, pixel_out, a
 
     assign gradient = (absGx + absGy);
 
-    assign Gxt = {2'b00,absGx[`BIT_LENGTH_GRD - 1 : 2]} + {3'b000,absGx[`BIT_LENGTH_GRD - 1 : 3]} + {5'b00000,absGx[`BIT_LENGTH_GRD - 1 : 5]} + {7'b0000000,absGx[`BIT_LENGTH_GRD - 1] };
-    assign Gyt = {2'b00,absGy[`BIT_LENGTH_GRD - 1 : 2]} + {3'b000,absGy[`BIT_LENGTH_GRD - 1 : 3]} + {5'b00000,absGy[`BIT_LENGTH_GRD - 1 : 5]} + {7'b0000000,absGy[`BIT_LENGTH_GRD - 1] };
+    assign Gxt = { 2'b00, absGx[`BIT_LENGTH_GRD - 1:2] } + { 3'b000,absGx[`BIT_LENGTH_GRD - 1:3] } + 
+				 { 5'b00000, absGx[`BIT_LENGTH_GRD - 1:5] } + { 7'b0000000, absGx[`BIT_LENGTH_GRD - 1] };
+    assign Gyt = { 2'b00, absGy[`BIT_LENGTH_GRD - 1:2] } + { 3'b000,absGy[`BIT_LENGTH_GRD - 1:3] } + 
+				 { 5'b00000, absGy[`BIT_LENGTH_GRD - 1:5] } + { 7'b0000000, absGy[`BIT_LENGTH_GRD - 1] };
 
     assign w20 = Gxt > absGy ? 1 : 0;
     assign w21 = Gyt > absGx ? 1 : 0;
     
-    assign w23 = { w20 , w21 , sign_xor };
+    assign w23 = { w20, w21, sign_xor };
 
-    always@(w20 or w21 or sign_xor) begin
+    always @(w20 or w21 or sign_xor) begin
         case (w23)
             3'b100   : r_angle = 2'b00; // 0 degree
             3'b101   : r_angle = 2'b00;
@@ -1131,9 +1132,8 @@ module Sobel ( clk, reset, pixel_in0, pixel_in1, pixel_in2, enable, pixel_out, a
     
             3'b011   : r_angle = 2'b10; //90
             3'b010   : r_angle = 2'b10;
-        default : r_angle  = 2'b00;
-
-     endcase
+        	default : r_angle  = 2'b00;
+     	endcase
     end
 
 // ================ Sequential ================ //
@@ -1158,10 +1158,10 @@ module Sobel ( clk, reset, pixel_in0, pixel_in1, pixel_in2, enable, pixel_out, a
             reg_pixel_col2[1] <= pixel_in1;
             reg_pixel_col2[2] <= pixel_in2;
 
-            state      <= next_state;
-            output_r   <= output_w;
+            state        <= next_state;
+            output_r     <= output_w;
             ang_output_r <= ang_output_w;
-            readable_r <= readable_w;
+            readable_r   <= readable_w;
         end
     end
 
