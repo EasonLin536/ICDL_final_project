@@ -72,6 +72,7 @@ module tb();
 		if (i < DATA_LENGTH) begin
 			// if we should load input pixels again
 			if (!in_pause) begin
+				if (i == 0) $display("PROCESSING IMAGE %d/%d", i / 80 + 1, INPUT_TILE);
 
 				pixel_in0 = pixel0_mem[i];
 				pixel_in1 = pixel1_mem[i];
@@ -82,6 +83,7 @@ module tb();
 				i = i + 1;
 
 				if (i % 80 == 0 && i != 0) begin
+					$display("PROCESSING IMAGE %d/%d", i / 80 + 1, INPUT_TILE);
 					#2.5 reset = 1'b1;
 					#5   reset = 1'b0;
 				end
