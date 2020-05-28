@@ -1,6 +1,6 @@
-# Canny Edge Detection
+# Canny Algorithm-Edge Detection
 
-2020_spring IC Design Lab final project, NTUEE
+2020 Spring IC Design Lab Final Project, NTUEE
 
 ## Introduction
 We implemented the edge part of **Dade Toonify**<sup>[1](#Reference)</sup> in verilog. The color is quite simple, apply median filter and gaussian filter on the image pixels R, G, B. Quantize the colors to desired number. We decide to implement this part with python. Combine the above two, we can create cartoon effect on any image.
