@@ -11,7 +11,7 @@
 
 module tb();
 
-	parameter INPUT_TILE  = 1350; // modify for # of input tile
+	parameter INPUT_TILE  = 100; // modify for # of input tile
 	parameter DATA_LENGTH = 80 * INPUT_TILE;
 	parameter OUT_LENGTH  = 18*18 * INPUT_TILE;
 
@@ -49,6 +49,11 @@ module tb();
 	initial begin
 		$dumpfile("CHIP.fsdb");
      	$dumpvars;
+		out_f = $fopen("out.dat");
+   		if (out_f == 0) begin
+        	$display("Output file open error !");
+        	$finish;
+		end
     end
 
     initial begin
@@ -99,7 +104,7 @@ module tb();
 	
 	always @(negedge clk) begin
 		if (j < OUT_LENGTH && readable) begin
-
+			$fdisplay(out_f, edge_out);
 			if ((j + 1) % 324 == 0) begin
 				in_pause = 1'b0;
 				load_end = 1'b0;
@@ -110,7 +115,7 @@ module tb();
 
 		    if (edge_out !== pixel_temp) begin
 		        $display("ERROR at %d:output %d !=expect %d ", pattern_num, edge_out, pixel_temp);
-			    $fdisplay(out_f,"ERROR at %d:output %d !=expect %d ", pattern_num, edge_out, pixel_temp);
+			    $display("ERROR at %d:output %d !=expect %d ", pattern_num, edge_out, pixel_temp);
 		        err = err + 1 ;
 		    end
 
