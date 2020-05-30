@@ -2,3 +2,6 @@
 Testbench/input/
 *.jpg
 *.dat
+Testbench/pattern/
+.gitignore
+*.py

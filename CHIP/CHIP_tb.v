@@ -49,7 +49,7 @@ module tb();
 	initial begin
 		$dumpfile("CHIP.fsdb");
      	$dumpvars;
-		out_f = $fopen("out.dat");
+		out_f = $fopen("out_view.dat");
    		if (out_f == 0) begin
         	$display("Output file open error !");
         	$finish;

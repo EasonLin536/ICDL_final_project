@@ -593,10 +593,10 @@ def main():
     show_edge(image_final)
 
     for i in range(5):
-        with open("pattern/input_pixel/pixel_in" + str(i) + ".dat", 'w') as f:
+        with open("pattern/input_pixel/dolphin/pixel_in" + str(i) + ".dat", 'w') as f:
             f.write('\n'.join(pixel_in[i]))
 
-    with open("pattern/out_golden.dat", 'w') as f:
+    with open("pattern/input_pixel/dolphin/out_golden.dat", 'w') as f:
             f.write('\n'.join(map("{0:01b}".format, pixel_out)))
 
 
