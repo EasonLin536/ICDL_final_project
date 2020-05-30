@@ -42,4 +42,5 @@ for i in range(1, len(img_packed_row)):
         img_final = np.concatenate((img_final, img_packed_row[i]),axis=0)
 
 img = Image.fromarray(img_final.astype(np.uint8))
-img.show()
+# img.show()
+img.save('test_edge.jpg')
