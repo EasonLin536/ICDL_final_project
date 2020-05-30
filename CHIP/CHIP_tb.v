@@ -11,17 +11,17 @@
 
 module tb();
 
-	parameter INPUT_TILE  = 100; // modify for # of input tile
+	parameter INPUT_TILE  = 1350; // modify for # of input tile
 	parameter DATA_LENGTH = 80 * INPUT_TILE;
-	parameter OUT_LENGTH  = 18*18 * INPUT_TILE;
+	parameter OUT_LENGTH  = 18 * 18 * INPUT_TILE;
 
-	reg        clk, reset, load_end;
+	reg                      clk, reset, load_end;
 	reg  [`BIT_LENGTH - 1:0] pixel_in0;
 	reg  [`BIT_LENGTH - 1:0] pixel_in1;
 	reg  [`BIT_LENGTH - 1:0] pixel_in2;
 	reg  [`BIT_LENGTH - 1:0] pixel_in3;
 	reg  [`BIT_LENGTH - 1:0] pixel_in4;
-	wire       edge_out;
+	wire                     edge_out;
     
 	reg  [`BIT_LENGTH - 1:0] pixel_mem  [0:OUT_LENGTH-1];
 	reg  [`BIT_LENGTH - 1:0] angle_mem  [0:OUT_LENGTH-1];
@@ -32,10 +32,10 @@ module tb();
 	reg  [`BIT_LENGTH - 1:0] pixel4_mem [0:DATA_LENGTH-1];
 	reg  [`BIT_LENGTH - 1:0] pixel_temp;
 
-	reg        in_pause;
-	reg        stop;
-	integer    i, j, k, out_f, err, pattern_num;
-	reg        over;
+	reg     in_pause;
+	reg     stop;
+	integer i, j, k, out_f, err, pattern_num;
+	reg     over;
 
 	CHIP chip (clk, reset, pixel_in0, pixel_in1, pixel_in2, pixel_in3, pixel_in4, edge_out, load_end, readable);
 
@@ -115,7 +115,6 @@ module tb();
 
 		    if (edge_out !== pixel_temp) begin
 		        $display("ERROR at %d:output %d !=expect %d ", pattern_num, edge_out, pixel_temp);
-			    $display("ERROR at %d:output %d !=expect %d ", pattern_num, edge_out, pixel_temp);
 		        err = err + 1 ;
 		    end
 
