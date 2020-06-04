@@ -8,6 +8,7 @@
 `define PIXEL4 "./pattern/pixel_in4.dat"
 `define EXPECT "./pattern/out_golden.dat"
 `define BIT_LENGTH 4
+`define SDFFILE "./CHIP.sdf"
 
 module tb();
 
@@ -37,8 +38,9 @@ module tb();
 	integer i, j, k, out_f, err, pattern_num;
 	reg     over;
 
-	CHIP chip (clk, reset, pixel_in0, pixel_in1, pixel_in2, pixel_in3, pixel_in4, edge_out, load_end, readable);
+	CANNY canny (clk, reset, pixel_in0, pixel_in1, pixel_in2, pixel_in3, pixel_in4, edge_out, load_end, readable);
 
+	initial $sdf_annotate(`SDFFILE, chip);
 	initial	$readmemb (`PIXEL0, pixel0_mem);
 	initial	$readmemb (`PIXEL1, pixel1_mem);
 	initial	$readmemb (`PIXEL2, pixel2_mem);
