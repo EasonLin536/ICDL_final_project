@@ -5,22 +5,22 @@
 ## Introduction
 We implemented the edge part of **Dade Toonify**<sup>[1](#Reference)</sup> in verilog. The color is quite simple, apply median filter and gaussian filter on the image pixels R, G, B. Quantize the colors to desired number. We decide to implement this part with python. Combine the above two, we can create cartoon effect on any image.
 
-CHIP/CHIP.v is the top module, and all sub-modules have their own directories. In Testbench/pattern, contains all test patterns for each step, which are generated with Testbench/bitwise_split.py.
+*CHIP/CHIP.v* is the top module, and all sub-modules have their own directories. In *Testbench/pattern*, contains all test patterns for each step, which are generated with *Testbench/bitwise_split.py*.
 
-We load in 20 * 20 pixels of gray scale image per tile. In this implementation, we aim to process image of size 900 * 600 pixels, which requires 1350 tiles. You can change the INPUT_TILE in CHIP/CHIP_tb.v along with the in/out patterns for different size of images.
+We load in 20 * 20 pixels of gray scale image per tile. In this implementation, we aim to process image of size 900 * 600 pixels, which requires 1350 tiles. You can change the *INPUT_TILE* in *CHIP/CHIP_tb.v* along with the in/out patterns for different size of images.
 
-The output is 1 or 0, indicating a edge or not. IO_process/out.py takes the output of the circuit and re-construct an image only with edge.
+The output is 1 or 0, indicating a edge or not. *IO_process/out.py* takes the output of the circuit and re-construct an image only with edge.
 
 ## Steps and Description
-### [Median Filter](https://en.wikipedia.org/wiki/Median_filter)
+### Median Filter
 Change the current pixel to the median of its adjacent pixels. Get rid of too much details, which would cause too many redundant edges.
-### [Gaussian Filter](https://en.wikipedia.org/wiki/Gaussian_filter)
+### Gaussian Filter
 Current pixel become the result of convolution with a 5x5 gaussian filter. Smooth the image, also prevent too many edges.
-### [Sobel Gradient Calculation](https://en.wikipedia.org/wiki/Sobel_operator)
+### Sobel Gradient Calculation
 Find the magnitude and the direction of gradient of the current pixel with sobel operators.
-### [Non-Maximum Supression](https://en.wikipedia.org/wiki/Canny_edge_detector)
+### Non-Maximum Supression
 After previous steps, the edge becomes blur, non-maximum suppression can make the edge thinner.
-### [Hysteresis](https://en.wikipedia.org/wiki/Canny_edge_detector)
+### Hysteresis
 Double threshold and Hysteresis combined, link the edges into a continuous line, and delete isolated small edges.
 
 ## Entire Block Diagram
