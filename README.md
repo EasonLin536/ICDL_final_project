@@ -58,6 +58,13 @@ generate out_golden in `Testbench/` and input_pixels in `Testbench/pattern/input
 python3 out.py <image_fname> <image_width> <image_height>
 ```
 show image generated with `CHIP.v`
+
+## Result
+### Original image
+![Original image](example/dolphin.jpg)
+### Re-constructed image
+![Reconstruct](example/dolphin_edge.jpg)
+
 ## Reference
 1. [Kevin Dade, "Toonify: Cartoon Photo Effect Application"](https://stacks.stanford.edu/file/druid:yt916dh6570/Dade_Toonify.pdf?fbclid=IwAR1gOlnXmNU__UuYD7Nf0CCpfYra8a3TEcoqNKSrLZkzdsH3rN_HOahgmfU)
 2. [FienSoP/canny_edge_detector](https://github.com/FienSoP/canny_edge_detector)

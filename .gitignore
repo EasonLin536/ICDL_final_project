@@ -1,6 +1,7 @@
 **/.DS_Store
 Testbench/input/
-*.jpg
+Testbench/*.jpg
+IO_process/edge_image
 *.dat
 Testbench/pattern/
 .gitignore
