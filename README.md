@@ -15,27 +15,27 @@ The output is 1 or 0, indicating a edge or not. `IO_process/out.py` takes the ou
 ### Median Filter
 Change the current pixel to the median of its adjacent pixels. Get rid of too much details, which would cause too many redundant edges.
 
-![Median filter](example/med_fil.png)
+![Median filter](asset/med_fil.png)
 ### Gaussian Filter
 Current pixel become the result of convolution with a 5x5 gaussian filter. Smooth the image, also prevent too many edges.
 
-![Gaussian Filter](example/gau_fil.png)
+![Gaussian Filter](asset/gau_fil.png)
 ### Sobel Gradient Calculation
 Find the magnitude and the direction of gradient of the current pixel with sobel operators.
 
-![Sobel Gradient Calculation](example/sobel_grad.png)
-![Sobel Angle Calculation](example/sobel_ang.png)
+![Sobel Gradient Calculation](asset/sobel_grad.png)
+![Sobel Angle Calculation](asset/sobel_ang.png)
 ### Non-Maximum Supression
 After previous steps, the edge becomes blur, non-maximum suppression can make the edge thinner.
 
-![Non-Maximum Supression](example/non_max.png)
+![Non-Maximum Supression](asset/non_max.png)
 ### Hysteresis
 Double threshold and Hysteresis combined, link the edges into a continuous line, and delete isolated small edges.
 
-![Hysteresis](example/hyster.png)
+![Hysteresis](asset/hyster.png)
 
 ## Entire Block Diagram
-![CHIP block diagram](example/CHIP.png)
+![CHIP block diagram](asset/CHIP.png)
 
 ## Usage
 #### CHIP/CHIP.v
@@ -61,9 +61,9 @@ show image generated with `CHIP.v`
 
 ## Result
 ### Original image
-![Original image](example/dolphin.jpg)
+![Original image](asset/dolphin.jpg)
 ### Re-constructed image
-![Reconstruct](example/dolphin_edge.jpg)
+![Reconstruct](asset/dolphin_edge.jpg)
 
 ## Reference
 1. [Kevin Dade, "Toonify: Cartoon Photo Effect Application"](https://stacks.stanford.edu/file/druid:yt916dh6570/Dade_Toonify.pdf?fbclid=IwAR1gOlnXmNU__UuYD7Nf0CCpfYra8a3TEcoqNKSrLZkzdsH3rN_HOahgmfU)
