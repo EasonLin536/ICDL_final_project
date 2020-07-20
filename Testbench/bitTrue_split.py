@@ -1,3 +1,4 @@
+import os
 import sys
 import copy
 import numpy as np
@@ -105,9 +106,7 @@ def Median(img, debug=False, file=False):
 
         for j in range(W-2):
             A.append(serial[i][j+2])
-            # TODO
-            # print(A)
-
+            
             x0, x1, x2 = A[0][0], A[0][1], A[0][2]
             x3, x4, x5 = A[1][0], A[1][1], A[1][2]
             x6, x7, x8 = A[2][0], A[2][1], A[2][2]
@@ -145,19 +144,9 @@ def Median(img, debug=False, file=False):
             if file:
                 golden.append(median)
 
-            # End TODO
             del A[0]
 
         img_med.append(med_row)
-
-    if file:
-        with open("pattern/Median/out_golden.dat", 'w') as f:
-            f.write('\n'.join(map("{0:04b}".format, golden)))
-        with open("pattern/Median/out_square", 'w') as f:
-            square = []
-            for i in range(18):
-                square.append(' '.join(map(str, golden[18*i:18*(i+1)])))
-            f.write('\n'.join(square))
 
     # return type should be a 2-dimensional numpy array representing the grayscale of the image.
     # Elements in the numpy array should be integer type within 0~31.
@@ -239,59 +228,58 @@ def Gaussian(img, debug=False, file=False):
 
         img_gau.append(gau_row)
 
-
-    if file:
-        with open("pattern/Gaussian/out_golden.dat", 'w') as f:
-            f.write('\n'.join(map("{0:04b}".format, golden)))
-        with open("pattern/Gaussian/out_square", 'w') as f:
-            square = []
-            for i in range(16):
-                square.append(' '.join(map(str, golden[16*i:16*(i+1)])))
-            f.write('\n'.join(square))
-
     # return type should be a 2-dimensional numpy array representing the grayscale of the image.
     # Elements in the numpy array should be integer type within 0~31.
     img_pad = Padding(np.array(img_gau), padnum=2)
-    return img_pad   
+    return img_pad
+
 # ================== Sobel Convolution================== #
+
 def sign(number): # extend number to 8 bits  
     if number >= 0: return 0
     else: return 1
+
 def sobel_col0(img_col):
     sum0=(img_col[0]*-1)
     sum1=(img_col[1]*-2)
     sum2=(img_col[2]*-1)
     return sum0+sum1+sum2
-#def sobel_col1(img_col):
-#   return 0
+
 def sobel_col2(img_col):
     sum0=(img_col[0])
     sum1=(img_col[1])<<1
     sum2=(img_col[2])
     return sum0+sum1+sum2
+
 def sobel_col3(img_col):
     sum0=(img_col[0])
     sum2=(img_col[2]*-1)
     return sum0+sum2
+
 def sobel_col4(img_col):
     sum0=(img_col[0])<<1
     sum2=(img_col[2])*-2
     return sum0+sum2
+
 def sobel_col5(img_col):
     sum0=(img_col[0])
     sum2=(img_col[2])*-1
     return sum0+sum2
+
 def sign_XOR(Gx_MSB,Gy_MSB):
     return Gx_MSB ^ Gy_MSB
+
 def tangent_22_5(G):
     return (G>>2) + (G>>3) + (G>>5) + (G>>7)
+
 def angle_judge(sign,Gxt,Gyt):
     if ((not Gxt) and (not Gyt)): 
-        if(sign): return 3#01 45
-        else : return 1#11 135
+        if(sign): return 3 # 01 45
+        else : return 1 # 11 135
     else :
-        if(Gxt): return 0 #  0
-        else : return 2 #10 90
+        if(Gxt): return 0 # 0
+        else : return 2 # 10 90
+
 def compare_bool(n1,n2):
     if n1>n2 : return True
     else : return False
@@ -305,48 +293,35 @@ def Sobel(img, debug=False, file=False):
         golden_ang = []
         golden_grad = []
 
-    img_angle=[]
-    img_gradient=[]
-    for i in range(H-2):
+    img_angle = []
+    img_gradient = []
+    for i in range(H - 2):
         A = serial[i][0:2]
 
-        angle_row=[]
-        gradient_row=[]
-        for j in range(W-2):
+        angle_row = []
+        gradient_row = []
+        for j in range(W - 2):
             A.append(serial[i][j+2])
 
-            # TODO
-            # print(A)
-            sum0=sobel_col0(A[0])
-            #sum1=sobel_col1(A[1])#=0
-            sum2=sobel_col2(A[2])
-            sum3=sobel_col3(A[0])
-            sum4=sobel_col4(A[1])
-            sum5=sobel_col5(A[2])
+            sum0 = sobel_col0(A[0])
+            sum2 = sobel_col2(A[2])
+            sum3 = sobel_col3(A[0])
+            sum4 = sobel_col4(A[1])
+            sum5 = sobel_col5(A[2])
 
-            
-            # if count == 25:
-            #     print(A)
-            #     print(sum0)
-            #     print(0)
-            #     print(sum2)
-            #     print(sum3)
-            #     print(sum4)
-            #     print(sum5)
-            #     print()
             count += 1
 
-            Gx=sum0+sum2# 8 bits
-            Gy=sum3+sum4+sum5# 8 bits
-            Gx_val=abs(Gx)
-            Gy_val=abs(Gy)
-            Gradient=((Gx_val+Gy_val)>>2)
-            Gx_tan=tangent_22_5(Gx_val)
-            Gy_tan=tangent_22_5(Gy_val)
-            Gxt=compare_bool(Gx_tan,Gy_val)
-            Gyt=compare_bool(Gy_tan,Gx_val)
-            co_sign=sign_XOR(sign(Gx),sign(Gy))
-            angle=angle_judge(co_sign,Gxt,Gyt)
+            Gx = sum0 + sum2
+            Gy = sum3 + sum4 + sum5
+            Gx_val = abs(Gx)
+            Gy_val = abs(Gy)
+            Gradient = ((Gx_val + Gy_val) >> 2)
+            Gx_tan = tangent_22_5(Gx_val)
+            Gy_tan = tangent_22_5(Gy_val)
+            Gxt = compare_bool(Gx_tan,Gy_val)
+            Gyt = compare_bool(Gy_tan,Gx_val)
+            co_sign = sign_XOR(sign(Gx),sign(Gy))
+            angle = angle_judge(co_sign,Gxt,Gyt)
             angle_row.append(angle)
             gradient_row.append(Gradient)
 
@@ -354,26 +329,10 @@ def Sobel(img, debug=False, file=False):
                 golden_grad.append(Gradient)
                 golden_ang.append(angle)
 
-            # End TODO
             del A[0]
+
         img_angle.append(angle_row)
         img_gradient.append(gradient_row)
-
-    if file:
-        with open("pattern/Sobel/golden_grad.dat", 'w') as f:
-            f.write('\n'.join(map("{0:04b}".format, golden_grad)))
-        with open("pattern/Sobel/golden_ang.dat", 'w') as f:
-            f.write('\n'.join(map("{0:02b}".format, golden_ang)))
-        with open("pattern/Sobel/out_square_grad", 'w') as f:
-            square = []
-            for i in range(18):
-                square.append(' '.join(map(str, golden_grad[18*i:18*(i+1)])))
-            f.write('\n'.join(square))
-        with open("pattern/Sobel/out_square_ang", 'w') as f:
-            square = []
-            for i in range(18):
-                square.append(' '.join(map(str, golden_ang[18*i:18*(i+1)])))
-            f.write('\n'.join(square))
 
     # First return:     return type should be a 2-dimensional numpy array representing the gradient of the image.
     #                   Elements in the numpy array should be integer type within 0~31.
@@ -398,10 +357,6 @@ def nonMax(gradient, angle, debug=False, file=False):
         for j in range(W):
             A.append(serial[i][j+2])
             ang = angle[i][j]
-
-            # TODO
-            # print(A)
-            # print(ang)
 
             # MUX
             if ang  == 0:
@@ -429,19 +384,10 @@ def nonMax(gradient, angle, debug=False, file=False):
 
             if file:
                 golden.append(result)
-            # End TODO
+
             del A[0]
 
         img_med.append(med_row)
-
-    if file:
-        with open("pattern/nonMax/out_golden.dat", 'w') as f:
-            f.write('\n'.join(map("{0:04b}".format, golden)))
-        with open("pattern/nonMax/out_square", 'w') as f:
-            square = []
-            for i in range(18):
-                square.append(' '.join(map(str, golden[18*i:18*(i+1)])))
-            f.write('\n'.join(square))
 
     # return type should be a 2-dimensional numpy array representing the modified gradient of the image.
     # Elements in the numpy array should be integer type within 0~31.
@@ -467,8 +413,6 @@ def Hysteresis(img, debug=False, file=False):
         for j in range(W-2):
             A.append(serial[i][j+2])
 
-            # TODO
-            # print(A)
             result = None
             if A[1][1] <= weak:
                 result = False
@@ -491,19 +435,11 @@ def Hysteresis(img, debug=False, file=False):
 
             if file:
                 golden.append(result)
-            # End TODO
+
             del A[0]
 
         img_med.append(med_row)
 
-    if file:
-        with open("pattern/Hysteresis/out_golden.dat", 'w') as f:
-            f.write('\n'.join(map("{0:01b}".format, golden)))
-        with open("pattern/Hysteresis/out_square", 'w') as f:
-            square = []
-            for i in range(18):
-                square.append(' '.join(map(lambda x: str(int(x)), golden[18*i:18*(i+1)])))
-            f.write('\n'.join(square))
     # return type should be a 2-dimensional numpy array representing the modified gradient of the image.
     # Elements in the numpy array should be ???(True or False?).
     return np.array(img_med)
@@ -514,12 +450,15 @@ def main():
     split_size = 20
     global height, width, pixel_in, pixel_out
 
-    orig_img = Image.open(sys.argv[1])
+    in_fname = sys.argv[1]
+    out_dir = sys.argv[2]
+    if os.path.isdir(f"pattern/{out_dir}") is False:
+        os.makedirs(f"pattern/{out_dir}")
+
+    orig_img = Image.open(in_fname)
     orig_img = orig_img.resize((width, height), Image.ANTIALIAS)
     orig_img = grayscale(np.asarray(orig_img))
     Image.fromarray((orig_img*8).astype(np.uint8)).show()
-    if save:
-        Image.fromarray((orig_img*8).astype(np.uint8)).save("output/init.jpg")
 
     img_list = split_img(orig_img, split_size)
     bin_h = int(width/split_size)
@@ -530,36 +469,18 @@ def main():
     width = split_size - 2
 
     for i, img in enumerate(img_list):
-        print("===== bin{} =====".format(i))
-        #print("=== Median ===")
+        print("===== bin{} =====".format(i), end='\r')
+        # print("=== Median ===")
         img_med = Median(img)
-        # img_med = img
-        if save:
-            Image.fromarray((img_med*8).astype(np.uint8)).save("output/med.jpg")
-
         #print("=== Gaussian ===")
         img_gau = Gaussian(img_med)
-        # img_gau = img_med
-        if save:
-            Image.fromarray((img_gau*8).astype(np.uint8)).save("output/gau.jpg")
-
         #print("=== Sobel ===")
         img_grad, img_angle = Sobel(img_gau)
-        if save:
-            Image.fromarray((img_grad*16).astype(np.uint8)).save("output/grad.jpg")
-            Image.fromarray((img_angle*64).astype(np.uint8)).save("output/angle.jpg")
-
         #print("=== nonMax ===")
         img_sup = nonMax(img_grad, img_angle)
-        if save:
-            Image.fromarray((img_sup*16).astype(np.uint8)).save("output/sup.jpg")
-
         #print("=== Hysteresis ===")
         img_final = Hysteresis(img_sup)
-        if save:
-            Image.fromarray((img_final*255).astype(np.uint8)).save("output/final.jpg")
-
-        if i%bin_h == 0:
+        if i % bin_h == 0:
             image_result[int(i/bin_h)] = img_final
         else:
             image_result[int(i/bin_h)] = np.concatenate((image_result[int(i/bin_h)], img_final),axis = 1)
@@ -568,13 +489,13 @@ def main():
     for i in range(1, len(image_result)):
         image_final = np.concatenate((image_final, image_result[i]),axis = 0)
 
-    show_edge(image_final)
+    # show_edge(image_final)
 
     for i in range(5):
-        with open("pattern/input_pixel/dolphin/pixel_in" + str(i) + ".dat", 'w') as f:
+        with open(f"pattern/{out_dir}/pixel_in" + str(i) + ".dat", 'w') as f:
             f.write('\n'.join(pixel_in[i]))
 
-    with open("pattern/input_pixel/dolphin/out_golden.dat", 'w') as f:
+    with open(f"pattern/{out_dir}/out_golden.dat", 'w') as f:
             f.write('\n'.join(map("{0:01b}".format, pixel_out)))
 
 
