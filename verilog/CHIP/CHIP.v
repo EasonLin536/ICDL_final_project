@@ -14,54 +14,48 @@ module CANNY ( clk, reset, pixel_in0, pixel_in1, pixel_in2, pixel_in3, pixel_in4
 
 // ================ Reg & Wires ================ //
 	// LOAD_REG
-	reg  [`INDEX_LEN - 1:0] load_index; // calculate index when loading into reg_img
+	reg   [`INDEX_LEN - 1:0] load_index; // calculate index when loading into reg_img
 	
 	// LOAD_MOD
 	// sub-modules' input index
-	reg  [`INDEX_LEN - 1:0] ind_0_r, ind_1_r, ind_2_r, ind_3_r, ind_4_r; // current index of input pixels
-	reg  [`INDEX_LEN - 1:0] ind_0_w, ind_1_w, ind_2_w, ind_3_w, ind_4_w;
-	reg  [`INDEX_LEN - 1:0] ind_ang_r, ind_ang_w;
+	reg   [`INDEX_LEN - 1:0] ind_0_r, ind_1_r, ind_2_r, ind_3_r, ind_4_r; // current index of input pixels
+	reg   [`INDEX_LEN - 1:0] ind_0_w, ind_1_w, ind_2_w, ind_3_w, ind_4_w;
+	reg   [`INDEX_LEN - 1:0] ind_ang_r, ind_ang_w;
 	// sub-modules' output index
-	reg  [`INDEX_LEN - 1:0] ind_load_tmp_r, ind_load_tmp_w;
+	reg   [`INDEX_LEN - 1:0] ind_load_tmp_r, ind_load_tmp_w;
 	
 	// indicators
-	reg  [`INDEX_LEN - 1:0] ind_col_end_r, ind_col_end_w; // assign with ind_1 - 1, if ind_0 == ind_col_end -> col_end = 1'b0
-	reg  [`INDEX_LEN - 1:0] ind_en_rise_r, ind_en_rise_w; // the index when enable signal rise
-	reg                     row_end; // determine kernel movement
-	reg                     col_end_r, col_end_w;
+	reg   [`INDEX_LEN - 1:0] ind_col_end_r, ind_col_end_w; // assign with ind_1 - 1, if ind_0 == ind_col_end -> col_end = 1'b0
+	reg   [`INDEX_LEN - 1:0] ind_en_rise_r, ind_en_rise_w; // the index when enable signal rise
+	reg                      row_end; // determine kernel movement
+	reg                      col_end_r, col_end_w;
 
 	// sub-modules' input pixel registers
 	reg  [`BIT_LENGTH - 1:0] reg_in_r [0:4]; // reg for sub-modules input
 	reg  [`BIT_LENGTH - 1:0] reg_in_w [0:4]; // reg for sub-modules input
 	wire [`BIT_LENGTH - 1:0] in_0, in_1, in_2, in_3, in_4; // wires connected to sub-modules' inputs
-	assign in_0 = reg_in_r[0];
-	assign in_1 = reg_in_r[1];
-	assign in_2 = reg_in_r[2];
-	assign in_3 = reg_in_r[3];
-	assign in_4 = reg_in_r[4];
+	
 	
 	// sub-modules' input angle registers
-	reg  [1:0] reg_ang_r, reg_ang_w;
-	wire [1:0] ang_in;
-	assign ang_in = reg_ang_r;
+	reg                [1:0] reg_ang_r, reg_ang_w;
+	wire               [1:0] ang_in;
 
 	// enable of sub-modules : modify in LOAD_MOD
-	reg  enable_r, enable_w;
-	reg  readable_r;
-	wire readable_w;
-	wire mf_en, gf_en, sb_en, nm_en, hy_en;
+	reg                      enable_r, enable_w;
+	reg                      readable_r;
+	wire                     readable_w;
+	wire                     mf_en, gf_en, sb_en, nm_en, hy_en;
 	
 	// readable of sub-modules
-	wire mf_read, gf_read, sb_read, nm_read, hy_read;
+	wire                     mf_read, gf_read, sb_read, nm_read, hy_read;
 	// use for extend col_end and LOAD_MOD state, 
 	// because when finish loading input (col is ended), 
 	// it takes a few cycles for the outputs to be written to reg_tmp
-	reg  sub_read_r;
-	wire sub_read_w;
-	assign sub_read_w = mf_read | gf_read | sb_read | nm_read | hy_read;
+	reg                      sub_read_r;
+	wire                     sub_read_w;
 
 	// sub-modules are reset when state PREPARE
-	wire sub_reset;
+	wire                     sub_reset;
 
 	// output of sub-modules
 	wire [`BIT_LENGTH - 1:0] mf_out;
@@ -70,31 +64,25 @@ module CANNY ( clk, reset, pixel_in0, pixel_in1, pixel_in2, pixel_in3, pixel_in4
 	wire               [1:0] sb_ang_out;
 	wire [`BIT_LENGTH - 1:0] nm_out;
 	
-	// sub-modules' registers
+	// sub-modules' input registers
 	reg  [`BIT_LENGTH - 1:0] load_tmp_r, load_tmp_w; // pixel
 	reg                [1:0] load_ang_r; // angle
 	wire               [1:0] load_ang_w;
-	assign load_ang_w = sb_read ? sb_ang_out : 2'd0;
-
-	// chip readable 
-	assign readable_w = hy_read;
-	assign readable   = readable_r; // modilfy for different module debugging
 
 	// chip output register
-	reg  edge_out_r;
-	wire edge_out_w;
-	assign edge_out = edge_out_r;
+	reg                      edge_out_r;
+	wire                     edge_out_w;
 
 	// for loops
     integer i;
 
-// =============== Register File =============== //
-    reg [`BIT_LENGTH - 1:0] reg_img_r   [0:`TOTAL_REG - 1];
-    reg [`BIT_LENGTH - 1:0] reg_img_w   [0:`TOTAL_REG - 1];
-    reg [`BIT_LENGTH - 1:0] reg_tmp_r   [0:`TOTAL_REG - 1];
-    reg [`BIT_LENGTH - 1:0] reg_tmp_w   [0:`TOTAL_REG - 1];
-    reg               [1:0] reg_angle_r [0:`TOTAL_REG - 1];
-    reg               [1:0] reg_angle_w [0:`TOTAL_REG - 1];
+// ================= Registers ================ //
+    reg  [`BIT_LENGTH - 1:0] reg_img_r   [0:`TOTAL_REG - 1];
+    reg  [`BIT_LENGTH - 1:0] reg_img_w   [0:`TOTAL_REG - 1];
+    reg  [`BIT_LENGTH - 1:0] reg_tmp_r   [0:`TOTAL_REG - 1];
+    reg  [`BIT_LENGTH - 1:0] reg_tmp_w   [0:`TOTAL_REG - 1];
+    reg                [1:0] reg_angle_r [0:`TOTAL_REG - 1];
+    reg                [1:0] reg_angle_w [0:`TOTAL_REG - 1];
 
 // ================== States =================== //
     reg [2:0] state, state_next;
@@ -105,12 +93,12 @@ module CANNY ( clk, reset, pixel_in0, pixel_in1, pixel_in2, pixel_in3, pixel_in4
     parameter WRITE_BACK = 3'd4; // write the pixels in reg_tmp to reg_img and add padding
 
     reg [2:0] operation, operation_next; // current operation e.g., Median_Filter
-    parameter IDLE     = 3'd0;
-	parameter MED_FIL  = 3'd1; // 3*3 median filter
-    parameter GAU_FIL  = 3'd2; // 5*5 gaussian filter
-    parameter SOBEL    = 3'd3; // sobel gradient calculation
-    parameter NON_MAX  = 3'd4; // non-maximum supression
-    parameter HYSTER   = 3'd5; // hysteresis
+    parameter IDLE       = 3'd0;
+	parameter MED_FIL    = 3'd1; // 3*3 median filter
+    parameter GAU_FIL    = 3'd2; // 5*5 gaussian filter
+    parameter SOBEL      = 3'd3; // sobel gradient calculation
+    parameter NON_MAX    = 3'd4; // non-maximum supression
+    parameter HYSTER     = 3'd5; // hysteresis
 
 // =========== Declare Sub-Modules ============= //
 	Median_Filter mf ( .clk(clk), .reset(sub_reset), .enable(mf_en),
@@ -157,6 +145,29 @@ module CANNY ( clk, reset, pixel_in0, pixel_in1, pixel_in2, pixel_in3, pixel_in4
 	end
 
 // =============== Combinational =============== //
+	// sub-modules' input pixel registers
+	assign in_0 = reg_in_r[0];
+	assign in_1 = reg_in_r[1];
+	assign in_2 = reg_in_r[2];
+	assign in_3 = reg_in_r[3];
+	assign in_4 = reg_in_r[4];
+	
+	// sub-modules' input angle registers
+	assign ang_in = reg_ang_r;
+	
+	// readable of sub-modules
+	assign sub_read_w = mf_read | gf_read | sb_read | nm_read | hy_read;
+	
+	// sub-modules' input registers
+	assign load_ang_w = sb_read ? sb_ang_out : 2'd0;
+	
+	// chip readable 
+	assign readable_w = hy_read;
+	assign readable   = readable_r; // modilfy for different module debugging
+	
+	// chip output register
+	assign edge_out = edge_out_r;
+
 	/* SET_OP */
 	// operation transition
 	always @(*) begin
