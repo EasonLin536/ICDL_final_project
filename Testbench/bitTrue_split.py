@@ -6,8 +6,8 @@ from PIL import Image
 from scipy.ndimage.filters import convolve
 from scipy.signal import medfilt2d
 
-width = 900 #900
-height = 600  #600
+width = 900
+height = 600
 
 ## output data
 pixel_in = [[] for i in range(5)]
@@ -508,28 +508,6 @@ def Hysteresis(img, debug=False, file=False):
     # Elements in the numpy array should be ???(True or False?).
     return np.array(img_med)
 
-## === COPY ===
-def sobel_filters(img):
-    Kx = np.array([[-1, 0, 1], [-2, 0, 2], [-1, 0, 1]], np.float32)
-    Ky = np.array([[1, 2, 1], [0, 0, 0], [-1, -2, -1]], np.float32)
-
-    Ix = convolve(img, Kx)
-    Iy = convolve(img, Ky)
-
-    #G = np.hypot(Ix, Iy).astype(np.int32)
-    G = (np.abs(Ix) + np.abs(Iy)) >> 3
-    theta = np.arctan2(Iy, Ix)
-
-    return (G, theta)
-
-def gaussian_kernel(size, sigma=1):
-        size = int(size) // 2
-        x, y = np.mgrid[-size:size+1, -size:size+1]
-        normal = 1 / (2.0 * np.pi * sigma**2)
-        g =  np.exp(-((x**2 + y**2) / (2.0*sigma**2))) * normal
-        return g
-
-## === End COPY ===
 
 def main():
     save = False

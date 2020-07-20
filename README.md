@@ -38,9 +38,9 @@ Double threshold and Hysteresis combined, link the edges into a continuous line,
 ![CHIP block diagram](asset/CHIP.png)
 
 ## Usage
-#### CHIP/CHIP.v
+#### verilog/
 ```bash
-ncverilog +access+r CHIP/CHIP_tb.v CHIP/CHIP.v
+ncverilog +access+r -f files.f
 ```
 change pattern path, input tile number in `CHIP/CHIP_tb.v`
 #### Testbench/bitTrue_full.py

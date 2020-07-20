@@ -1,5 +1,3 @@
-`define BIT_LENGTH 5
-
 module Median_Filter ( clk, reset, pixel_in0, pixel_in1, pixel_in2, enable, pixel_out, readable );
 
 	input                      clk, reset;
@@ -12,33 +10,33 @@ module Median_Filter ( clk, reset, pixel_in0, pixel_in1, pixel_in2, enable, pixe
 
 // ================ Reg & Wires ================ //
 
-	reg    [`BIT_LENGTH - 1:0] reg_pixel_col0 [0:2]; // store the oldest pixels
-	reg    [`BIT_LENGTH - 1:0] reg_pixel_col1 [0:2];
-	reg    [`BIT_LENGTH - 1:0] reg_pixel_col2 [0:2];
+	reg  [`BIT_LENGTH - 1:0] reg_pixel_col0 [0:2]; // store the oldest pixels
+	reg  [`BIT_LENGTH - 1:0] reg_pixel_col1 [0:2];
+	reg  [`BIT_LENGTH - 1:0] reg_pixel_col2 [0:2];
 
-	reg    [1:0]               next_state;
-	reg    [1:0]               state;
+	reg  [1:0]               next_state;
+	reg  [1:0]               state;
 
-    reg    [`BIT_LENGTH - 1:0] x [0:8];
+    reg  [`BIT_LENGTH - 1:0] x [0:8];
 
     // output register
-    reg    [`BIT_LENGTH - 1:0] output_r; 
-    wire   [`BIT_LENGTH - 1:0] output_w;
-    reg    [`BIT_LENGTH - 1:0] reg_median;
-    wire   [`BIT_LENGTH - 1:0] median;
+    reg  [`BIT_LENGTH - 1:0] output_r; 
+    wire [`BIT_LENGTH - 1:0] output_w;
+    reg  [`BIT_LENGTH - 1:0] reg_median;
+    wire [`BIT_LENGTH - 1:0] median;
 
     // output readable signal
-    reg    readable_r;
-    wire   readable_w;
-    reg    reg_readable;
+    reg  readable_r;
+    wire readable_w;
+    reg  reg_readable;
 
-    // conparator
-    wire   [`BIT_LENGTH - 1:0] w0, w1, w2, w3, w4,
-                               w5, w6, w7, w8, w9,
-                               w10, w11, w12, w13, w14,
-                               w15, w16, w17, w18, w19,
-                               w20, w21, w22, w23, w24,
-                               w25, w26, w27, w28;
+    // comparator
+    wire [`BIT_LENGTH - 1:0] w0, w1, w2, w3, w4,
+                        	 w5, w6, w7, w8, w9,
+                        	 w10, w11, w12, w13, w14,
+                        	 w15, w16, w17, w18, w19,
+                        	 w20, w21, w22, w23, w24,
+                        	 w25, w26, w27, w28;
     
     // for loop
     integer i;

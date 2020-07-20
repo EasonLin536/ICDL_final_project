@@ -7,3 +7,4 @@ Testbench/pattern/
 .gitignore
 *.py
 Testbench/*.png
+venv/

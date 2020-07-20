@@ -1,5 +1,3 @@
-`define BIT_LENGTH 5
-
 module Gaussian_Filter ( clk, reset, pixel_in0, pixel_in1, pixel_in2, pixel_in3, pixel_in4, enable, pixel_out, readable );
 
 	input                      clk, reset;
