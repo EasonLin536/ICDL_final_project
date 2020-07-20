@@ -2,9 +2,10 @@ import sys
 import numpy as np
 from PIL import Image
 
-filename = sys.argv[1]
-pixelnum_w = int(sys.argv[2])
-pixelnum_h = int(sys.argv[3])
+in_fname = sys.argv[1]
+out_fname = sys.argv[2]
+pixelnum_w = int(sys.argv[3])
+pixelnum_h = int(sys.argv[4])
 
 assert pixelnum_w % 20 == 0, "width({}) is not evenly divisble by 20".format(pixelnum_w)
 assert pixelnum_h % 20 == 0, "height({}) is not evenly divisble by 20".format(pixelnum_h)
@@ -12,7 +13,7 @@ assert pixelnum_h % 20 == 0, "height({}) is not evenly divisble by 20".format(pi
 binnum_w = int(pixelnum_w/20)
 binnum_h = int(pixelnum_h/20)
 
-with open(filename, 'r') as f:
+with open(in_fname, 'r') as f:
 	data = f.read()
 	img_raw = np.array(data.split('\n')[:-1])
 
@@ -42,5 +43,5 @@ for i in range(1, len(img_packed_row)):
         img_final = np.concatenate((img_final, img_packed_row[i]),axis=0)
 
 img = Image.fromarray(img_final.astype(np.uint8))
-# img.show()
-img.save('test_edge.jpg')
+
+img.save(out_fname)

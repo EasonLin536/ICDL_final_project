@@ -1,10 +1,4 @@
 **/.DS_Store
-Testbench/input/
-Testbench/*.jpg
 IO_process/edge_image
-*.dat
-Testbench/pattern/
 .gitignore
-*.py
-Testbench/*.png
 venv/
